@@ -1,4 +1,4 @@
-use crate::shop::{self, Shop};
+use crate::shop::{Shop};
 
 pub struct Economy {
     shops: Vec<Shop>,

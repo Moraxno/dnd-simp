@@ -1,4 +1,4 @@
-use std::{error::{self, Error}, fmt};
+use std::{fmt};
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};

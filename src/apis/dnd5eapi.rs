@@ -9,6 +9,8 @@ use anyhow::anyhow;
 use mockall::*;
 use mockall::predicate::*;
 
+use crate::registry::ItemType;
+
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct Dnd5eApiItem {
@@ -105,6 +107,19 @@ impl Dnd5eApiMagicItemList {
     }
 }
 
+pub fn dnd5eapi_to_itemtype(item: &Dnd5eApiItem) -> anyhow::Result<ItemType> {
+    let rarity = match item.rarity.name.as_str() {
+        "Common" => crate::registry::Rarity::Common,
+        "Rare" => crate::registry::Rarity::Rare,
+        "Very Rare" => crate::registry::Rarity::VeryRare,
+        "Legendary" => crate::registry::Rarity::Legendary,
+        "Artifact" => crate::registry::Rarity::Artifact,
+        _ => anyhow::bail!("Invalid rarity string encountered.")
+    };
+    
+    Ok(ItemType::new(item.name.clone(), rarity))
+}
+
 
 pub struct Dnd5eApiRequester {
 
@@ -122,7 +137,7 @@ impl PerformsRequest for Dnd5eApiRequester {
 #[cfg(test)]
 mod tests {
     use mockall::predicate::eq;
-    use super::{Dnd5eApiItem, Dnd5eApiMagicItemList, MockPerformsRequest};
+    use super::{Dnd5eApiItem, Dnd5eApiMagicItemList, MockPerformsRequest, dnd5eapi_to_itemtype};
 
     #[test]
     fn item_is_parsed() -> anyhow::Result<()> {
@@ -180,6 +195,18 @@ mod tests {
 
         let constructed_item = l.search_item(".*crab.*", &requester)?;
         assert_eq!(constructed_item, expected_item);
+
+        Ok(())
+    }
+
+    #[test]
+    fn conversion_works() -> anyhow::Result<()> {
+        let item_contents = std::fs::read_to_string("assets/dnd5eapi/magic-items/apparatus-of-the-crab.json")?;
+        let item = Dnd5eApiItem::from_json(item_contents.as_str())?;
+
+        let converted_type = dnd5eapi_to_itemtype(&item)?;
+
+        assert_eq!(converted_type.name, item.name);
 
         Ok(())
     }

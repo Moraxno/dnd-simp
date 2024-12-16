@@ -1,31 +1,14 @@
 use serde::{Deserialize, Serialize};
 use rand::seq::SliceRandom;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Rarity {
-    Common,
-    Rare,
-    VeryRare,
-    Legendary,
-    Artifact,
-}
+use crate::registry::ItemType;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Item {
-    name: String,
-    rarity: Rarity,
-}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Shop {
     name: String,
-    inventory: Vec<Item>,
-}
-
-impl Item {
-    pub fn new(name: String, rarity: Rarity) -> Self {
-        Self { name, rarity }
-    }
+    inventory: Vec<ItemType>,
 }
 
 impl Shop {
@@ -36,11 +19,11 @@ impl Shop {
         }
     }
 
-    pub fn get_inventory(&self) -> &[Item] {
+    pub fn get_inventory(&self) -> &[ItemType] {
         self.inventory.as_slice()
     }
 
-    pub fn produce_offer(&self) -> Vec<&Item> {
+    pub fn produce_offer(&self) -> Vec<&ItemType> {
         self.inventory
             .choose_multiple(&mut rand::thread_rng(), 3)
             .collect()

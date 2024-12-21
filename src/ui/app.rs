@@ -140,7 +140,7 @@ impl<'a> App<'a> {
         let l = ratatui::widgets::Table::new(
             self.campaign
                 .get_shops()
-                .into_iter()
+                .iter()
                 .map(|shop| Row::new(vec!["S", shop.name.as_str()])),
             [1, 50],
         )
@@ -254,7 +254,7 @@ impl AppOverlay for ShopSelectMenuPopup {
                 break;
             }
 
-            let offer_name = &offer[i as usize].name;
+            let offer_name = &offer[i].name;
 
             let par = Paragraph::new(offer_name.as_str())
                 .block(Block::bordered())

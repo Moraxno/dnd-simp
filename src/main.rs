@@ -24,10 +24,10 @@ fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign
         let _ = f.read_to_string(&mut buf)?;
         let content = buf.as_str();
         let campaign = serde_yaml::from_str(content)?;
-        return Ok(campaign);
+        Ok(campaign)
     } else {
-        return Ok(campaign::Campaign::new("Tina's und Sina's Kampagne".into()));
-    };
+        Ok(campaign::Campaign::new("Tina's und Sina's Kampagne".into()))
+    }
 }
 
 fn main() -> anyhow::Result<()> {

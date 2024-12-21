@@ -37,7 +37,7 @@ struct Dnd5eApiEquipmentCategory {
 
 impl Dnd5eApiItem {
     pub fn from_json(json_text: &str) -> anyhow::Result<Self> {
-        let item: Self = serde_json::from_str(&json_text)?;
+        let item: Self = serde_json::from_str(json_text)?;
         Ok(item)
     }
 }

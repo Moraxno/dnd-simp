@@ -27,11 +27,11 @@ impl Campaign {
 
 #[cfg(test)]
 mod tests {
-    use super::Shop;
+    use super::Campaign;
 
     #[test]
     fn new_campaign_is_empty() {
-        let e = Campaign::new("New Campaign");
+        let e = Campaign::new("New Campaign".into());
         assert_eq!(e.get_shops().len(), 0)
     }
 }

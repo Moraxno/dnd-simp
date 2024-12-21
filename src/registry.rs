@@ -1,5 +1,3 @@
-use std::{any, io::BufReader};
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,7 +21,7 @@ impl Rarity {
             Rarity::Common => "common".into(),
             Rarity::Artifact => "ARTIFACT".into(),
             Rarity::Rare => "rare".into(),
-            _ => "I am to lazy".into()
+            _ => "I am to lazy".into(),
         }
     }
 
@@ -34,18 +32,16 @@ impl Rarity {
             Rarity::Rare => "R".into(),
             Rarity::VeryRare => "V".into(),
             Rarity::Legendary => "L".into(),
-            _ => "I am to lazy".into()
+            _ => "I am to lazy".into(),
         }
     }
 }
-
 
 impl ItemType {
     pub fn new(name: String, rarity: Rarity) -> Self {
         Self { name, rarity }
     }
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
@@ -55,9 +51,7 @@ pub struct ItemRegistry {
 
 impl ItemRegistry {
     pub fn new() -> Self {
-        Self {
-            item_types: vec![]
-        }
+        Self { item_types: vec![] }
     }
 
     pub fn add(&mut self, item_type: ItemType) {

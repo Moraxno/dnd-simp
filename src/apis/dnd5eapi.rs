@@ -1,16 +1,15 @@
+use std::fmt;
 use std::fmt::Write as _;
-use std::{fmt};
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use anyhow::anyhow;
 
-use mockall::*;
 use mockall::predicate::*;
+use mockall::*;
 
 use crate::registry::ItemType;
-
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct Dnd5eApiItem {
@@ -21,12 +20,12 @@ struct Dnd5eApiItem {
     variants: Vec<()>,
     variant: bool,
     desc: Vec<String>,
-    url: String
+    url: String,
 }
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct Dnd5eApiItemRarity {
-    name: String
+    name: String,
 }
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -55,7 +54,7 @@ struct Dnd5eApiMagicItemList {
 struct Dnd5eApiMagicItemListing {
     index: String,
     name: String,
-    url: String
+    url: String,
 }
 
 #[derive(Debug)]
@@ -94,14 +93,22 @@ impl Dnd5eApiMagicItemList {
         Err(anyhow!(Dnd5eApiError::ItemNotFound))
     }
 
-    pub fn download_item(&self, sub_url: &str, requester: &dyn PerformsRequest) -> anyhow::Result<Dnd5eApiItem> {
+    pub fn download_item(
+        &self,
+        sub_url: &str,
+        requester: &dyn PerformsRequest,
+    ) -> anyhow::Result<Dnd5eApiItem> {
         let resp = requester.request_from_sub_url(sub_url)?;
         let item = Dnd5eApiItem::from_json(&resp)?;
 
         Ok(item)
     }
 
-    pub fn search_item(&self, item_regex: &str, requester: &dyn PerformsRequest) -> anyhow::Result<Dnd5eApiItem> {
+    pub fn search_item(
+        &self,
+        item_regex: &str,
+        requester: &dyn PerformsRequest,
+    ) -> anyhow::Result<Dnd5eApiItem> {
         let sub_url = self.search_for_url(item_regex)?;
         self.download_item(&sub_url, requester)
     }
@@ -114,16 +121,13 @@ pub fn dnd5eapi_to_itemtype(item: &Dnd5eApiItem) -> anyhow::Result<ItemType> {
         "Very Rare" => crate::registry::Rarity::VeryRare,
         "Legendary" => crate::registry::Rarity::Legendary,
         "Artifact" => crate::registry::Rarity::Artifact,
-        _ => anyhow::bail!("Invalid rarity string encountered.")
+        _ => anyhow::bail!("Invalid rarity string encountered."),
     };
-    
+
     Ok(ItemType::new(item.name.clone(), rarity))
 }
 
-
-pub struct Dnd5eApiRequester {
-
-}
+pub struct Dnd5eApiRequester {}
 
 impl PerformsRequest for Dnd5eApiRequester {
     fn request_from_sub_url(&self, sub_url: &str) -> anyhow::Result<String> {
@@ -136,8 +140,8 @@ impl PerformsRequest for Dnd5eApiRequester {
 
 #[cfg(test)]
 mod tests {
+    use super::{dnd5eapi_to_itemtype, Dnd5eApiItem, Dnd5eApiMagicItemList, MockPerformsRequest};
     use mockall::predicate::eq;
-    use super::{Dnd5eApiItem, Dnd5eApiMagicItemList, MockPerformsRequest, dnd5eapi_to_itemtype};
 
     #[test]
     fn item_is_parsed() -> anyhow::Result<()> {
@@ -183,7 +187,8 @@ mod tests {
         let list_contents = std::fs::read_to_string("assets/dnd5eapi-itemlist.json")?;
         let l = Dnd5eApiMagicItemList::from_json(&list_contents)?;
 
-        let item_contents = std::fs::read_to_string("assets/dnd5eapi/magic-items/apparatus-of-the-crab.json")?;
+        let item_contents =
+            std::fs::read_to_string("assets/dnd5eapi/magic-items/apparatus-of-the-crab.json")?;
         let expected_item = Dnd5eApiItem::from_json(item_contents.as_str())?;
 
         let mut requester = MockPerformsRequest::new();
@@ -201,7 +206,8 @@ mod tests {
 
     #[test]
     fn conversion_works() -> anyhow::Result<()> {
-        let item_contents = std::fs::read_to_string("assets/dnd5eapi/magic-items/apparatus-of-the-crab.json")?;
+        let item_contents =
+            std::fs::read_to_string("assets/dnd5eapi/magic-items/apparatus-of-the-crab.json")?;
         let item = Dnd5eApiItem::from_json(item_contents.as_str())?;
 
         let converted_type = dnd5eapi_to_itemtype(&item)?;

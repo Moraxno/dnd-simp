@@ -1,22 +1,20 @@
-use std::io::{Read, Write};
+use std::io::Read;
 
 use campaign::Campaign;
-use registry::ItemType;
-use clap::{Parser};
-use shop::Shop;
+use clap::Parser;
 
-mod campaign;
-mod shop;
 mod apis;
-mod registry;
+mod campaign;
 mod meta;
+mod registry;
+mod shop;
 mod ui;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct CliArgs {
     #[arg(short, long)]
-    campaign_file: Option<String>
+    campaign_file: Option<String>,
 }
 
 fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign> {
@@ -35,7 +33,6 @@ fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign
 fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
 
-    
     let mut s = load_campaign_file(args.campaign_file)?;
 
     println!("{s:?}");

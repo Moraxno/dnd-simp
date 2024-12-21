@@ -1,16 +1,19 @@
-use std::{fs, io::Read, iter::Enumerate, str::FromStr};
-
 use layout::Flex;
-use ratatui::{crossterm::{event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind, MouseEventKind}, execute, style::Color}, style::Style, widgets::{block::title, Block, Clear, List, ListState, Paragraph, Row, Table, TableState}, DefaultTerminal, Frame};
 use ratatui::prelude::*;
+use ratatui::{
+    crossterm::{
+        event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
+        style::Color,
+    },
+    style::Style,
+    widgets::{Block, Clear, Paragraph, Row, TableState},
+    DefaultTerminal, Frame,
+};
 
-use chrono::Utc;
-
-use crate::{campaign::{self, Campaign}, registry::ItemRegistry, shop::Shop};
+use crate::{campaign::Campaign, shop::Shop};
 
 enum AppPopup {
     WhatToDoWithShop { index: usize },
-
 }
 
 struct App<'a> {
@@ -26,12 +29,10 @@ struct App<'a> {
     messages: Vec<AppMessage>,
 }
 
-
-
 #[derive(Debug, Clone)]
 pub enum AppCategory {
     Shops,
-    Weather
+    Weather,
 }
 
 const TABS: [AppCategory; 2] = [AppCategory::Shops, AppCategory::Weather];
@@ -42,7 +43,7 @@ const APP_TITLE: &str = "DnD Simp";
 pub enum AppMessage {
     SwitchCategory(AppCategory),
     PreviousCategory,
-    NextCategory
+    NextCategory,
 }
 
 impl<'a> App<'a> {
@@ -74,17 +75,21 @@ impl<'a> App<'a> {
     pub fn update(&mut self) {
         while let Some(msg) = self.messages.pop() {
             match &msg {
-                AppMessage::NextCategory => if self.selected_tab < TABS.len() - 1 {
-                    self.selected_tab += 1;
-                },
-                AppMessage::PreviousCategory => if self.selected_tab > 0 {
-                    self.selected_tab -= 1;
-                },
+                AppMessage::NextCategory => {
+                    if self.selected_tab < TABS.len() - 1 {
+                        self.selected_tab += 1;
+                    }
+                }
+                AppMessage::PreviousCategory => {
+                    if self.selected_tab > 0 {
+                        self.selected_tab -= 1;
+                    }
+                }
                 AppMessage::SwitchCategory(cat) => match cat {
                     AppCategory::Shops => self.selected_tab = 0,
                     AppCategory::Weather => self.selected_tab = 1,
                 },
-                _ => { /* do nothing, otherwise */ },   
+                _ => { /* do nothing, otherwise */ }
             }
         }
     }
@@ -122,10 +127,9 @@ impl<'a> App<'a> {
         frame.render_widget(campaign_name, campaign_name_area);
 
         let object_ident = ratatui::widgets::Paragraph::new(self.campaign.name.as_str())
-        .alignment(Alignment::Center)
-        .bg(Color::Grey);
+            .alignment(Alignment::Center)
+            .bg(Color::Grey);
         frame.render_widget(object_ident, object_ident_area);
-
 
         let t = ratatui::widgets::Tabs::new(["Shops", "Weather"])
             .select(self.selected_tab)
@@ -137,13 +141,15 @@ impl<'a> App<'a> {
             self.campaign
                 .get_shops()
                 .into_iter()
-                .map(|shop| Row::new(vec!["S", shop.name.as_str()])), [1, 50])
-            .block(Block::bordered().title(self.campaign.name.clone()))
-            .style(Style::new().white())
-            .row_highlight_style(Style::new().white().on_green())
-            // .header(Row::new(vec!["  ", "Shop"]))
-            .highlight_symbol(">> ")
-            .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
+                .map(|shop| Row::new(vec!["S", shop.name.as_str()])),
+            [1, 50],
+        )
+        .block(Block::bordered().title(self.campaign.name.clone()))
+        .style(Style::new().white())
+        .row_highlight_style(Style::new().white().on_green())
+        // .header(Row::new(vec!["  ", "Shop"]))
+        .highlight_symbol(">> ")
+        .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
 
         frame.render_stateful_widget(l, content_area, &mut self.registry_state);
 
@@ -158,7 +164,7 @@ impl<'a> App<'a> {
             // crossterm also emits key release and repeat events on Windows.
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 self.handle_key_event(key_event)
-            },
+            }
             _ => {}
         };
         Ok(())
@@ -169,22 +175,26 @@ impl<'a> App<'a> {
             let ctrl = over.handle_key_event(key_event);
 
             match ctrl {
-                FlowControl::ClosePopup => { self.overlay = None },
-                FlowControl::NoOperation => {},
+                FlowControl::ClosePopup => self.overlay = None,
+                FlowControl::NoOperation => {}
             }
         } else {
             let idx = self.registry_state.selected();
-        
+
             let i = idx.unwrap();
 
             let shop = &self.campaign.get_shops()[i];
 
             match key_event.code {
+                KeyCode::Enter => {
+                    self.overlay = Some(Box::new(ShopSelectMenuPopup::new(
+                        shop.name.clone(),
+                        shop.clone(),
+                    )))
+                }
 
-                KeyCode::Enter => {self.overlay = Some(Box::new(ShopSelectMenuPopup::new(shop.name.clone(), shop.clone())))},
-                
                 KeyCode::Char('q') => self.exit(),
-                KeyCode::Esc => {self.overlay = None},
+                KeyCode::Esc => self.overlay = None,
                 KeyCode::Up => self.registry_state.scroll_up_by(1),
                 KeyCode::Down => self.registry_state.scroll_down_by(1),
                 KeyCode::Right => self.messages.push(AppMessage::NextCategory),
@@ -201,14 +211,14 @@ impl<'a> App<'a> {
     }
 }
 
-struct ShopSelectMenuPopup { 
+struct ShopSelectMenuPopup {
     shop_name: String,
-    shop: Shop
+    shop: Shop,
 }
 
 enum FlowControl {
     ClosePopup,
-    NoOperation
+    NoOperation,
 }
 
 trait AppOverlay {
@@ -218,10 +228,7 @@ trait AppOverlay {
 
 impl ShopSelectMenuPopup {
     pub fn new(shop_name: String, shop: Shop) -> Self {
-        Self {
-            shop_name,
-            shop
-        }
+        Self { shop_name, shop }
     }
 }
 impl AppOverlay for ShopSelectMenuPopup {
@@ -263,7 +270,7 @@ impl AppOverlay for ShopSelectMenuPopup {
             KeyCode::Esc => FlowControl::ClosePopup,
             // KeyCode::Up => self.registry_state.scroll_up_by(1),
             // KeyCode::Down => self.registry_state.scroll_down_by(1),
-            _ => FlowControl::NoOperation
+            _ => FlowControl::NoOperation,
         }
     }
 }

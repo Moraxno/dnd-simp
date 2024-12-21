@@ -1,9 +1,7 @@
-use serde::{Deserialize, Serialize};
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 
 use crate::registry::ItemType;
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shop {
@@ -47,7 +45,6 @@ impl Shop {
             .collect()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

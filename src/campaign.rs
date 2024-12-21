@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::shop::Shop;
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Campaign {
     pub name: String,
@@ -11,7 +10,10 @@ pub struct Campaign {
 
 impl Campaign {
     pub fn new(name: String) -> Self {
-        Self { name, shops: vec![] }
+        Self {
+            name,
+            shops: vec![],
+        }
     }
 
     pub fn get_shops(&self) -> &[Shop] {
@@ -29,7 +31,7 @@ mod tests {
 
     #[test]
     fn new_campaign_is_empty() {
-        let e = Shop::new();
+        let e = Campaign::new("New Campaign");
         assert_eq!(e.get_shops().len(), 0)
     }
 }

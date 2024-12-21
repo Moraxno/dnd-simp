@@ -5,9 +5,10 @@ use crate::registry::ItemType;
 
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shop {
-    name: String,
+    pub name: String,
+    short_name: Option<String>,
     inventory: Vec<ItemType>,
 }
 
@@ -15,7 +16,24 @@ impl Shop {
     pub fn new(name: String) -> Self {
         Self {
             name,
+            short_name: None,
             inventory: vec![],
+        }
+    }
+
+    pub fn new_with_shorthand(name: String, short_name: String) -> Self {
+        Self {
+            name,
+            short_name: Some(short_name),
+            inventory: vec![],
+        }
+    }
+
+    pub fn short_name(&self) -> String {
+        if let Some(name) = &self.short_name {
+            name.clone()
+        } else {
+            self.name[..20].into()
         }
     }
 

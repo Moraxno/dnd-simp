@@ -1,0 +1,14 @@
+name: Veys to the golden Kault
+shops: 
+  - name: Tina's und Sina's und Sino's Schneiderei
+    inventory: 
+      - name: Mantel
+        rarity: Rare
+      - name: Mantel2
+        rarity: VeryRare
+      - name: Mantel3
+        rarity: Artifact
+      - name: Mantel4
+        rarity: Legendary
+  - name: Harry's Hornhobler
+    inventory: []

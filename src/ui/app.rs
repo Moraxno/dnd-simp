@@ -242,15 +242,15 @@ struct WelcomeScreen {}
 /// for all the angles and lengths
 pub fn render_d20(ctx: &mut Context, radius: f64) {
     let A = radius * 1.0_f64;
-    let B = radius * 0.925_f64;
-    let C = radius * 0.809_f64;
-    let D = radius * 0.347_f64;
+    let B = radius * 0.93418_f64;
+    let C = radius * 0.8165_f64;
+    let D = radius * 0.35683_f64;
 
-    let a = 98.182_f64.to_radians();
-    let b = 76.364_f64.to_radians();
+    let a = 97.761_f64.to_radians();
+    let b = 75.522_f64.to_radians();
     let c = 60.0_f64.to_radians();
-    let d = 51.818_f64.to_radians();
-    let e = 21.818_f64.to_radians();
+    let d = 52.239_f64.to_radians();
+    let e = 22.239_f64.to_radians();
 
     let H = 3.0_f64.sqrt() / 2.0 * A;
 

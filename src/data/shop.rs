@@ -39,9 +39,9 @@ impl Shop {
         self.inventory.as_slice()
     }
 
-    pub fn produce_offer(&self) -> Vec<&ItemType> {
+    pub fn produce_offer(&self, amount: u8) -> Vec<&ItemType> {
         self.inventory
-            .choose_multiple(&mut rand::thread_rng(), 3)
+            .choose_multiple(&mut rand::thread_rng(), amount.into())
             .collect()
     }
 }

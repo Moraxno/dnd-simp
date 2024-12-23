@@ -7,8 +7,10 @@ mod apis;
 mod campaign;
 mod meta;
 mod registry;
-mod shop;
+mod data;
 mod ui;
+
+mod state;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]

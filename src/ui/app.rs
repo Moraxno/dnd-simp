@@ -1,5 +1,9 @@
+use std::cmp::min;
+
 use layout::Flex;
+use rand::Fill;
 use ratatui::prelude::*;
+use ratatui::widgets::canvas::{Canvas, Context, Line, Map, MapResolution, Shape};
 use ratatui::{
     crossterm::{
         event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -9,8 +13,9 @@ use ratatui::{
     widgets::{Block, Clear, Paragraph, Row, TableState},
     DefaultTerminal, Frame,
 };
+use symbols::Marker;
 
-use crate::{campaign::Campaign, shop::Shop};
+use crate::{campaign::Campaign, data::shop::Shop};
 
 enum AppPopup {
     WhatToDoWithShop { index: usize },
@@ -22,7 +27,7 @@ struct App<'a> {
     registry_state: TableState,
     is_running: bool,
 
-    overlay: Option<Box<dyn AppOverlay>>,
+    overlay: Option<Box<dyn AppScreen>>,
 
     selected_tab: usize,
 
@@ -156,6 +161,10 @@ impl<'a> App<'a> {
         if let Some(over) = &self.overlay {
             over.draw(frame, popup_area(content_area, 50, 50));
         }
+
+        let w = WelcomeScreen {};
+        w.draw(frame, content_area);
+
     }
 
     fn handle_events(&mut self) -> anyhow::Result<()> {
@@ -221,9 +230,123 @@ enum FlowControl {
     NoOperation,
 }
 
-trait AppOverlay {
+trait AppScreen {
     fn draw(&self, frame: &mut Frame, area: Rect);
     fn handle_key_event(&mut self, key_event: KeyEvent) -> FlowControl;
+}
+
+struct WelcomeScreen {}
+
+/// Renders a D20 to the given ctx at (0, 0)
+/// Thanks to https://www.reddit.com/r/DnD/comments/go75gv/oc_flat_d20_sides_and_angles_for_home_projects/
+/// for all the angles and lengths
+pub fn render_d20(ctx: &mut Context, radius: f64) {
+    let A = radius * 1.0_f64;
+    let B = radius * 0.925_f64;
+    let C = radius * 0.809_f64;
+    let D = radius * 0.347_f64;
+
+    let a = 98.182_f64.to_radians();
+    let b = 76.364_f64.to_radians();
+    let c = 60.0_f64.to_radians();
+    let d = 51.818_f64.to_radians();
+    let e = 21.818_f64.to_radians();
+
+    let H = 3.0_f64.sqrt() / 2.0 * A;
+
+    let top = (0.0_f64, H/2.0 + D);
+    let left_upper = (top.0 - B * c.sin(), top.1 - B * c.cos());
+    let right_upper = (top.0 + B * c.sin(), top.1 - B * c.cos());
+    let left_lower = (left_upper.0, left_upper.1 - B);
+    let right_lower = (right_upper.0, right_upper.1 - B);
+    let bottom = (0.0, left_lower.1 + B * (2.0 * c).cos());
+
+    let tri_top = (0.0, H/2.0);
+    let tri_left = (-A/2.0, -H/2.0);
+    let tri_right = (A/2.0, -H/2.0);
+
+    let edges = [
+        // outer hex
+        (top, left_upper),
+        (left_upper, left_lower),
+        (left_lower, bottom),
+        (bottom, right_lower),
+        (right_lower, right_upper),
+        (right_upper, top),
+
+        // top connections
+        (tri_top, left_upper),
+        (tri_top, right_upper),
+        (tri_top, top),
+
+        // left connections
+        (tri_left, left_lower),
+        (tri_left, bottom),
+        (tri_left, left_upper),
+
+        // right connections
+        (tri_right, right_lower),
+        (tri_right, bottom),
+        (tri_right, right_upper),
+
+        // inner tri
+        (tri_top, tri_left),
+        (tri_left, tri_right),
+        (tri_right, tri_top),
+    ];
+
+    for e in &edges {
+        let line = Line::new(e.0.0, e.0.1, e.1.0, e.1.1, Color::Blue.into());
+        ctx.draw(&line);
+    }
+
+
+    // for l in &lines {q
+    //     ctx.draw(l);
+    // }
+}
+
+impl AppScreen for WelcomeScreen {
+    fn draw(&self, frame: &mut Frame, area: Rect) {
+        let shortest_side = min(area.width, 2 * area.height);
+        let [inner_area] = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(vec![
+                Constraint::Length(shortest_side)
+            ])
+            .flex(Flex::Center)
+            .areas(area);
+        let [draw_area] = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![
+                Constraint::Length(2 * shortest_side)
+            ])
+            .flex(Flex::Center)
+            .areas(inner_area);
+
+        let c = Canvas::default()
+            .block(Block::bordered())
+            .marker(Marker::Braille)
+            .paint(|ctx| {
+                // let side_angle = 60.0_f64;
+                // let offset = 30.0_f64;
+                // let r = 20.0_f64;
+                // for step in 0..6 {
+                //     let angle = (step as f64 * side_angle + offset).to_radians();
+                //     let next_angle = ((step + 1) as f64 * side_angle + offset).to_radians();
+                //     ctx.draw(&Line::new(r * angle.cos(), r * angle.sin(), r * next_angle.cos(), r * next_angle.sin(), Color::White.into()));
+                // }
+                render_d20(ctx, 10.0);
+            })
+            .x_bounds([-20.0, 20.0])
+            .y_bounds([-20.0, 20.0]);
+        
+        frame.render_widget(c, draw_area);
+    }
+
+    fn handle_key_event(&mut self, _key_event: KeyEvent) -> FlowControl {
+        FlowControl::NoOperation
+    }
 }
 
 impl ShopSelectMenuPopup {
@@ -231,7 +354,7 @@ impl ShopSelectMenuPopup {
         Self { shop_name, shop }
     }
 }
-impl AppOverlay for ShopSelectMenuPopup {
+impl AppScreen for ShopSelectMenuPopup {
     fn draw(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered().title(format!("Selecting {}", self.shop_name));
 
@@ -245,7 +368,7 @@ impl AppOverlay for ShopSelectMenuPopup {
             ])
             .areas(area);
 
-        let offer = self.shop.produce_offer();
+        let offer = self.shop.produce_offer(3);
 
         frame.render_widget(Clear, area); //this clears out the background
 
@@ -256,10 +379,25 @@ impl AppOverlay for ShopSelectMenuPopup {
 
             let offer_name = &offer[i].name;
 
+            let [title_area, desc_area] = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![
+                    Constraint::Fill(1),
+                    Constraint::Fill(2),
+                ])
+                .areas(*op_area);
+
             let par = Paragraph::new(offer_name.as_str())
-                .block(Block::bordered())
-                .centered();
-            frame.render_widget(par, *op_area);
+                .centered()
+                .bold();
+
+            let rare_string = offer[i].rarity.as_string();
+
+            let par2 = Paragraph::new(rare_string.as_str())
+                .centered()
+                .italic();
+            frame.render_widget(par, title_area);
+            frame.render_widget(par2, desc_area);
         }
 
         frame.render_widget(block, area);

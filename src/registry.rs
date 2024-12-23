@@ -18,9 +18,11 @@ pub struct ItemType {
 impl Rarity {
     pub fn as_string(&self) -> String {
         match self {
-            Rarity::Common => "common".into(),
-            Rarity::Artifact => "ARTIFACT".into(),
-            Rarity::Rare => "rare".into(),
+            Rarity::Common => "Common".into(),
+            Rarity::Rare => "Rare".into(),
+            Rarity::VeryRare => "Very Rare".into(),
+            Rarity::Legendary => "Legendary".into(),
+            Rarity::Artifact => "Artifact".into(),
             _ => "I am to lazy".into(),
         }
     }

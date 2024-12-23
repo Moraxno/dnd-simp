@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::shop::Shop;
+use crate::data::shop::Shop;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Campaign {

@@ -5,7 +5,7 @@ use crate::data::shop::Shop;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Campaign {
     pub name: String,
-    shops: Vec<Shop>,
+    pub shops: Vec<Shop>,
 }
 
 impl Campaign {

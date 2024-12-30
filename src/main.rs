@@ -5,9 +5,9 @@ use clap::Parser;
 
 mod apis;
 mod campaign;
+mod data;
 mod meta;
 mod registry;
-mod data;
 mod ui;
 
 mod state;
@@ -35,16 +35,21 @@ fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign
 fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
 
-    let mut s = load_campaign_file(args.campaign_file)?;
+    let mut campaign = load_campaign_file(args.campaign_file)?;
 
-    println!("{s:?}");
+    let boxed_campaign = Box::new(campaign);
+    let campaign_ref: &'static mut Campaign = Box::leak(boxed_campaign);
+
+    // println!("{s:?}");
 
     // let f = std::fs::File::create("assets/outshop.yaml")?;
     // serde_yaml::to_writer(f, &s)?;
     // let d: String = serde_yaml::from_reader(f)?;
     // println!("Read YAML string: {}", d);
 
-    ui::app::run_app(&mut s);
+    let s = ui::app::run_app(campaign_ref);
+
+    drop(s);
 
     Ok(())
 }

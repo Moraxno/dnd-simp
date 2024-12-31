@@ -16,7 +16,7 @@ pub struct ShopsPage {
     shops: Vec<Rc<RefCell<Shop>>>,
     shop_table_state: TableState,
 
-    open_shop_page: Option<ShopPage>
+    open_shop_page: Option<ShopPage>,
 }
 
 impl ShopsPage {
@@ -40,12 +40,10 @@ impl RenderablePage for ShopsPage {
 
     fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
         let table = Table::new(
-            self.shops
-                .iter()
-                .map(|shop| {
-                    let s = shop.borrow().name.clone();
-                    Row::new(vec!["Generic".to_string(), s])
-                }),
+            self.shops.iter().map(|shop| {
+                let s = shop.borrow().name.clone();
+                Row::new(vec!["Generic".to_string(), s])
+            }),
             [1, 50],
         )
         .header(Row::new(vec!["Category", "Name"]).style(Style::default().bg(GREEN.c600)))
@@ -62,9 +60,15 @@ impl RenderablePage for ShopsPage {
         match event {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 match key_event.code {
-                    KeyCode::Up =>   { self.shop_table_state.scroll_up_by(1); None },
-                    KeyCode::Down => { self.shop_table_state.scroll_down_by(1); None },
-                    KeyCode::Enter => { 
+                    KeyCode::Up => {
+                        self.shop_table_state.scroll_up_by(1);
+                        None
+                    }
+                    KeyCode::Down => {
+                        self.shop_table_state.scroll_down_by(1);
+                        None
+                    }
+                    KeyCode::Enter => {
                         let shop = Rc::clone(&self.shops[self.shop_table_state.selected()?]);
                         self.open_shop_page = Some(ShopPage::new(shop));
                         None

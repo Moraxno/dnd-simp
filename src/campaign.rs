@@ -28,14 +28,11 @@ impl From<WorkCampaign> for Campaign {
     fn from(value: WorkCampaign) -> Self {
         Self {
             name: value.name,
-            shops: value.shops
+            shops: value
+                .shops
                 .into_iter()
-                .map(|rc| 
-                    rc
-                        .borrow()
-                        .to_owned()
-                )
-                .collect()
+                .map(|rc| rc.borrow().to_owned())
+                .collect(),
         }
     }
 }
@@ -44,15 +41,14 @@ impl From<Campaign> for WorkCampaign {
     fn from(value: Campaign) -> Self {
         Self {
             name: value.name,
-            shops: value.shops
+            shops: value
+                .shops
                 .into_iter()
-                .map(|shop| 
-                    Rc::new(RefCell::new(shop)))
-                .collect()
+                .map(|shop| Rc::new(RefCell::new(shop)))
+                .collect(),
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

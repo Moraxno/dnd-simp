@@ -1,10 +1,15 @@
 use std::cmp::min;
 
 use ratatui::{
-    crossterm::event::Event, layout::{Constraint, Direction, Flex, Layout, Rect}, style::{palette::material::WHITE, Color}, symbols::Marker, widgets::{
+    crossterm::event::Event,
+    layout::{Constraint, Direction, Flex, Layout, Rect},
+    style::{palette::material::WHITE, Color},
+    symbols::Marker,
+    widgets::{
         canvas::{Canvas, Context, Line},
         Block,
-    }, Frame
+    },
+    Frame,
 };
 
 use super::page::RenderablePage;
@@ -48,7 +53,7 @@ impl<'a> RenderablePage for HomePage {
 
         frame.render_widget(c, draw_area);
     }
-    
+
     fn handle_and_transact(&mut self, event: Event) -> Option<Event> {
         Some(event)
     }

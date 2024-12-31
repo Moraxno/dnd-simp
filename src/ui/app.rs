@@ -15,7 +15,7 @@ use ratatui::{
     widgets::{Block, Clear, Paragraph, Row, TableState},
     DefaultTerminal, Frame,
 };
-use style::palette::material::{RED, GRAY as SLATE};
+use style::palette::material::{GRAY as SLATE, RED};
 use symbols::Marker;
 
 use crate::campaign::WorkCampaign;
@@ -63,8 +63,6 @@ pub enum AppMessage {
 
 impl App {
     pub fn new(campaign: &'static mut WorkCampaign) -> anyhow::Result<Self> {
-
-
         Ok(Self {
             name: campaign.name.clone(),
             registry_state: TableState::default().with_selected(Some(0)),
@@ -156,24 +154,21 @@ impl App {
             .bg(Color::Grey);
         frame.render_widget(object_ident, object_ident_area);
 
-        let page_tabs = ratatui::widgets::Tabs::new(self.pages.iter().map(
-            |page| ratatui::text::Line::raw(format!("  {}  ", page.title()))
-        ))
-            .select(self.selected_tab)
-            .highlight_style(Style::new().fg(SLATE.c300).bg(RED.a100))
-            .padding("","")
-            .divider("");
+        let page_tabs = ratatui::widgets::Tabs::new(
+            self.pages
+                .iter()
+                .map(|page| ratatui::text::Line::raw(format!("  {}  ", page.title()))),
+        )
+        .select(self.selected_tab)
+        .highlight_style(Style::new().fg(SLATE.c300).bg(RED.a100))
+        .padding("", "")
+        .divider("");
 
-        let [tab_area,] = Layout::default()
-                .flex(Flex::Center)
-                .direction(Direction::Horizontal)
-                .constraints(vec![
-                    
-                    Constraint::Min(10),
-                    
-                ])
-                .areas(subline_area);
-
+        let [tab_area] = Layout::default()
+            .flex(Flex::Center)
+            .direction(Direction::Horizontal)
+            .constraints(vec![Constraint::Min(10)])
+            .areas(subline_area);
 
         let block = Block::new()
             .border_set(symbols::border::PROPORTIONAL_TALL)
@@ -211,9 +206,7 @@ impl App {
 
     fn handle_events(&mut self) -> anyhow::Result<()> {
         let ev = event::read()?;
-        let option_ev = self
-            .current_overlay()
-            .handle_and_transact(ev);
+        let option_ev = self.current_overlay().handle_and_transact(ev);
 
         if let Some(ev) = option_ev {
             match ev {
@@ -225,7 +218,7 @@ impl App {
                 _ => {}
             };
         }
-        
+
         Ok(())
     }
 

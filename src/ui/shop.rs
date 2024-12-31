@@ -1,8 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use ratatui::{
-    style::{Style, Stylize},
-    widgets::{Block, Row, Table, TableState},
+    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind}, style::{Style, Stylize}, widgets::{Block, Row, Table, TableState}
 };
 
 use crate::data::shop::Shop;
@@ -43,7 +42,7 @@ impl RenderablePage for ShopPage {
                 .map(|item| Row::new(vec![item.rarity.as_string(), item.name.clone()])),
             [1, 50],
         )
-        .block(Block::bordered())
+        .block(Block::bordered().title(self.shop.borrow().name.clone()))
         .row_highlight_style(Style::new().white().on_green())
         .highlight_symbol(">> ")
         .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
@@ -54,6 +53,14 @@ impl RenderablePage for ShopPage {
         &mut self,
         event: ratatui::crossterm::event::Event,
     ) -> Option<ratatui::crossterm::event::Event> {
+        if let Event::Key(key_event) = &event {
+            return match key_event.code {
+                KeyCode::Up if key_event.kind == KeyEventKind::Press => { self.inventory_table_state.scroll_up_by(1); None },
+                KeyCode::Down if key_event.kind == KeyEventKind::Press => { self.inventory_table_state.scroll_down_by(1); None }
+                _ => Some(event)
+            };
+        }
+
         Some(event)
     }
 }

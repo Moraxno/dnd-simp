@@ -31,14 +31,8 @@ impl ShopsPage {
             open_shop_page: None,
         }
     }
-}
 
-impl RenderablePage for ShopsPage {
-    fn title(&self) -> String {
-        "Shops".into()
-    }
-
-    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+    fn draw_self(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
         let table = Table::new(
             self.shops.iter().map(|shop| {
                 let s = shop.borrow().name.clone();
@@ -56,7 +50,28 @@ impl RenderablePage for ShopsPage {
         frame.render_stateful_widget(table, area, &mut self.shop_table_state);
     }
 
+}
+
+impl RenderablePage for ShopsPage {
+    fn title(&self) -> String {
+        "Shops".into()
+    }
+
+    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+        if let Some(ref mut page) = self.open_shop_page {
+            page.draw(frame, area);
+        } else {
+            self.draw_self(frame, area);
+        }
+    }
+
     fn handle_and_transact(&mut self, event: Event) -> Option<Event> {
+        let event = if let Some(ref mut page) = self.open_shop_page {
+            page.handle_and_transact(event)
+        } else {
+            Some(event)
+        }?;
+
         match event {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 match key_event.code {
@@ -71,6 +86,10 @@ impl RenderablePage for ShopsPage {
                     KeyCode::Enter => {
                         let shop = Rc::clone(&self.shops[self.shop_table_state.selected()?]);
                         self.open_shop_page = Some(ShopPage::new(shop));
+                        None
+                    }
+                    KeyCode::Esc => {
+                        self.open_shop_page = None;
                         None
                     }
                     _ => Some(event),

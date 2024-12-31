@@ -1,45 +1,55 @@
+use std::{cell::RefCell, rc::Rc};
+
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
-    style::{Style, Stylize},
+    style::{palette::material::GREEN, Style, Stylize},
     widgets::{Block, Row, Table, TableState},
 };
 
 use crate::data::shop::Shop;
 
-use super::page::RenderablePage;
+use crate::ui::page::RenderablePage;
 
-pub struct ShopsPage<'a> {
-    shops: &'a Vec<Shop>,
+use super::shop::ShopPage;
+
+pub struct ShopsPage {
+    shops: Vec<Rc<RefCell<Shop>>>,
     shop_table_state: TableState,
+
+    open_shop_page: Option<ShopPage>
 }
 
-impl<'a> ShopsPage<'a> {
-    pub fn new(shops: &'a mut Vec<Shop>) -> Self {
+impl ShopsPage {
+    pub fn new(shops: Vec<Rc<RefCell<Shop>>>) -> Self {
         Self {
-            shops,
             shop_table_state: TableState::default().with_selected(if shops.len() > 0 {
                 Some(0)
             } else {
                 None
             }),
+            shops,
+            open_shop_page: None,
         }
     }
 }
 
-impl<'a> RenderablePage for ShopsPage<'a> {
-    fn title(&self) -> &'static str {
-        "Shops"
+impl RenderablePage for ShopsPage {
+    fn title(&self) -> String {
+        "Shops".into()
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
         let table = Table::new(
             self.shops
                 .iter()
-                .map(|shop| Row::new(vec!["Generic", shop.name.as_str()])),
+                .map(|shop| {
+                    let s = shop.borrow().name.clone();
+                    Row::new(vec!["Generic".to_string(), s])
+                }),
             [1, 50],
         )
-        .header(Row::new(vec!["Category", "Name"]))
-        .block(Block::bordered().title("List of Shops"))
+        .header(Row::new(vec!["Category", "Name"]).style(Style::default().bg(GREEN.c600)))
+        .block(Block::bordered())
         .style(Style::new().white())
         .row_highlight_style(Style::new().white().on_green())
         .highlight_symbol(">> ")
@@ -54,6 +64,11 @@ impl<'a> RenderablePage for ShopsPage<'a> {
                 match key_event.code {
                     KeyCode::Up =>   { self.shop_table_state.scroll_up_by(1); None },
                     KeyCode::Down => { self.shop_table_state.scroll_down_by(1); None },
+                    KeyCode::Enter => { 
+                        let shop = Rc::clone(&self.shops[self.shop_table_state.selected()?]);
+                        self.open_shop_page = Some(ShopPage::new(shop));
+                        None
+                    }
                     _ => Some(event),
                 }
             }

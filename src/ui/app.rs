@@ -18,6 +18,7 @@ use ratatui::{
 use style::palette::material::{RED, GRAY as SLATE};
 use symbols::Marker;
 
+use crate::campaign::WorkCampaign;
 use crate::{campaign::Campaign, data::shop::Shop};
 
 use super::home::HomePage;
@@ -61,7 +62,9 @@ pub enum AppMessage {
 }
 
 impl App {
-    pub fn new(campaign: &'static mut Campaign) -> anyhow::Result<Self> {
+    pub fn new(campaign: &'static mut WorkCampaign) -> anyhow::Result<Self> {
+
+
         Ok(Self {
             name: campaign.name.clone(),
             registry_state: TableState::default().with_selected(Some(0)),
@@ -69,7 +72,7 @@ impl App {
             overlay: None,
             pages: vec![
                 Box::new(HomePage::new()),
-                Box::new(ShopsPage::new(&mut campaign.shops)),
+                Box::new(ShopsPage::new(campaign.shops.clone())),
             ],
             selected_tab: 0,
             messages: vec![],
@@ -393,7 +396,7 @@ fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-pub fn run_app(campaign: &'static mut Campaign) -> anyhow::Result<()> {
+pub fn run_app(campaign: &'static mut WorkCampaign) -> anyhow::Result<()> {
     let mut terminal = ratatui::init();
     let mut app = App::new(campaign)?;
     let app_result = app.run(&mut terminal);

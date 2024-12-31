@@ -19,9 +19,9 @@ impl HomePage {
     }
 }
 
-impl RenderablePage for HomePage {
-    fn title(&self) -> &'static str {
-        "Home"
+impl<'a> RenderablePage for HomePage {
+    fn title(&self) -> String {
+        "Home".into()
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) {

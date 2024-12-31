@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use campaign::Campaign;
+use campaign::{Campaign, WorkCampaign};
 use clap::Parser;
 
 mod apis;
@@ -28,17 +28,19 @@ fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign
         let campaign = serde_yaml::from_str(content)?;
         Ok(campaign)
     } else {
-        Ok(campaign::Campaign::new("Tina's und Sina's Kampagne".into()))
+        Ok(campaign::WorkCampaign::new("Tina's und Sina's Kampagne".into()).into())
     }
 }
 
 fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
 
-    let mut campaign = load_campaign_file(args.campaign_file)?;
+    let campaign = load_campaign_file(args.campaign_file)?;
 
-    let boxed_campaign = Box::new(campaign);
-    let campaign_ref: &'static mut Campaign = Box::leak(boxed_campaign);
+    let work_campaign: WorkCampaign = campaign.into();
+
+    let boxed_campaign = Box::new(work_campaign);
+    let campaign_ref: &'static mut WorkCampaign = Box::leak(boxed_campaign);
 
     // println!("{s:?}");
 

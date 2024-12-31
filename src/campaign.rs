@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use serde::{Deserialize, Serialize};
 
 use crate::data::shop::Shop;
@@ -8,22 +10,49 @@ pub struct Campaign {
     pub shops: Vec<Shop>,
 }
 
-impl Campaign {
+pub struct WorkCampaign {
+    pub name: String,
+    pub shops: Vec<Rc<RefCell<Shop>>>,
+}
+
+impl WorkCampaign {
     pub fn new(name: String) -> Self {
         Self {
             name,
             shops: vec![],
         }
     }
+}
 
-    pub fn get_shops(&self) -> &[Shop] {
-        self.shops.as_slice()
-    }
-
-    pub fn add_shop(&mut self, shop: Shop) {
-        self.shops.push(shop);
+impl From<WorkCampaign> for Campaign {
+    fn from(value: WorkCampaign) -> Self {
+        Self {
+            name: value.name,
+            shops: value.shops
+                .into_iter()
+                .map(|rc| 
+                    rc
+                        .borrow()
+                        .to_owned()
+                )
+                .collect()
+        }
     }
 }
+
+impl From<Campaign> for WorkCampaign {
+    fn from(value: Campaign) -> Self {
+        Self {
+            name: value.name,
+            shops: value.shops
+                .into_iter()
+                .map(|shop| 
+                    Rc::new(RefCell::new(shop)))
+                .collect()
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -31,7 +60,7 @@ mod tests {
 
     #[test]
     fn new_campaign_is_empty() {
-        let e = Campaign::new("New Campaign".into());
-        assert_eq!(e.get_shops().len(), 0)
+        let e = WorkCampaign::new("New Campaign".into());
+        assert_eq!(e.shops.len(), 0)
     }
 }

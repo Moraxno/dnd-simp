@@ -1,10 +1,7 @@
-use std::cmp::min;
-use std::option;
 
 use layout::Flex;
-use rand::Fill;
 use ratatui::prelude::*;
-use ratatui::widgets::canvas::{Canvas, Context, Line, Map, MapResolution, Shape};
+use ratatui::widgets::canvas::{Shape};
 use ratatui::widgets::{Borders, Padding};
 use ratatui::{
     crossterm::{
@@ -12,14 +9,13 @@ use ratatui::{
         style::Color,
     },
     style::Style,
-    widgets::{Block, Clear, Paragraph, Row, TableState},
+    widgets::{Block, Clear, Paragraph, TableState},
     DefaultTerminal, Frame,
 };
 use style::palette::material::{GRAY as SLATE, RED};
-use symbols::Marker;
 
 use crate::campaign::WorkCampaign;
-use crate::{campaign::Campaign, data::shop::Shop};
+use crate::{data::shop::Shop};
 
 use super::home::HomePage;
 use super::page::RenderablePage;
@@ -176,10 +172,10 @@ impl App {
             .padding(Padding::horizontal(3))
             .border_style(RED.a100);
 
-        let content_area = block.inner(border_area.clone());
+        let content_area = block.inner(border_area);
 
         frame.render_widget(page_tabs, tab_area);
-        frame.render_widget(block, border_area.clone());
+        frame.render_widget(block, border_area);
 
         self.pages[self.selected_tab].draw(frame, content_area);
 

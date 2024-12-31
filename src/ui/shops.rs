@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    crossterm::event::{Event, KeyCode, KeyEventKind},
     style::{palette::material::GREEN, Style, Stylize},
     widgets::{Block, Row, Table, TableState},
 };
@@ -22,7 +22,7 @@ pub struct ShopsPage {
 impl ShopsPage {
     pub fn new(shops: Vec<Rc<RefCell<Shop>>>) -> Self {
         Self {
-            shop_table_state: TableState::default().with_selected(if shops.len() > 0 {
+            shop_table_state: TableState::default().with_selected(if !shops.is_empty() {
                 Some(0)
             } else {
                 None

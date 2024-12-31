@@ -18,7 +18,7 @@ impl ShopPage {
     pub fn new(shop: Rc<RefCell<Shop>>) -> Self {
         Self {
             inventory_table_state: TableState::default().with_selected(
-                if shop.borrow().get_inventory().len() > 0 {
+                if !shop.borrow().get_inventory().is_empty() {
                     Some(0)
                 } else {
                     None

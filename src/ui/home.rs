@@ -1,4 +1,4 @@
-use std::{cmp::{max, min}, };
+use std::cmp::{max, min};
 
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
@@ -22,7 +22,10 @@ pub struct HomePage {
 
 impl HomePage {
     pub fn new() -> Self {
-        Self { color: WHITE, scale: 10.0 }
+        Self {
+            color: WHITE,
+            scale: 10.0,
+        }
     }
 }
 
@@ -67,10 +70,10 @@ impl<'a> RenderablePage for HomePage {
                 KeyCode::Down => {
                     self.scale -= 1.0;
                     if self.scale < 1.0 {
-                        self.scale = 1.0; 
+                        self.scale = 1.0;
                     }
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
     }

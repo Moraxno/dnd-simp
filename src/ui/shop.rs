@@ -1,7 +1,13 @@
 use std::{cell::RefCell, cmp::min, ops::AddAssign, rc::Rc};
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind}, layout::{Constraint, Layout, Margin}, style::{Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, BorderType, Paragraph, Row, Scrollbar, ScrollbarState, Table, TableState, Wrap}
+    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    layout::{Constraint, Layout, Margin},
+    style::{Style, Stylize},
+    text::{Line, Span, Text},
+    widgets::{
+        Block, BorderType, Paragraph, Row, Scrollbar, ScrollbarState, Table, TableState, Wrap,
+    },
 };
 use serde::de;
 
@@ -9,16 +15,16 @@ use crate::{data::shop::Shop, registry::ItemType};
 
 use super::{offer::OfferPage, page::RenderablePage};
 
-use tui_markdown;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use tui_markdown;
 
 use std::collections::VecDeque;
 
 #[derive(PartialEq, Debug)]
 enum FocusedArea {
     Inventory,
-    Details
+    Details,
 }
 
 impl FocusedArea {
@@ -90,8 +96,7 @@ impl ShopPage {
     }
 
     fn perform_transactions(&mut self) {
-
-        while let Some(transaction)= self.transactions.pop_front() {
+        while let Some(transaction) = self.transactions.pop_front() {
             let maybe_transaction = self.transact(transaction);
             if let Some(new_transaction) = maybe_transaction {
                 self.transactions.push_back(new_transaction);
@@ -113,24 +118,29 @@ impl ShopPage {
                 FocusedArea::Inventory => {
                     self.inventory_table_state.scroll_down_by(1);
                     self.detail_scroll = 0;
-                },
+                }
             },
             Transaction::PageUp => match self.focus {
-                FocusedArea::Details => self.detail_scroll = self.detail_scroll.saturating_sub(self.detail_height),
+                FocusedArea::Details => {
+                    self.detail_scroll = self.detail_scroll.saturating_sub(self.detail_height)
+                }
                 FocusedArea::Inventory => {
                     self.inventory_table_state.scroll_up_by(self.detail_height); // @todo wrong variable, should be height of inventory
                     self.detail_scroll = 0;
-                },
+                }
             },
             Transaction::PageDown => match self.focus {
-                FocusedArea::Details => self.detail_scroll = self.detail_scroll.saturating_add(self.detail_height),
+                FocusedArea::Details => {
+                    self.detail_scroll = self.detail_scroll.saturating_add(self.detail_height)
+                }
                 FocusedArea::Inventory => {
-                    self.inventory_table_state.scroll_down_by(self.detail_height); // @todo wrong variable, should be height of inventory
+                    self.inventory_table_state
+                        .scroll_down_by(self.detail_height); // @todo wrong variable, should be height of inventory
                     self.detail_scroll = 0;
-                },
-            }
-            Transaction::ShiftFocusForward => { self.focus = self.focus.next() },
-            Transaction::ShiftFocusBackward => { self.focus = self.focus.previous() },
+                }
+            },
+            Transaction::ShiftFocusForward => self.focus = self.focus.next(),
+            Transaction::ShiftFocusBackward => self.focus = self.focus.previous(),
             Transaction::CreateOffer => {
                 self.overlay_page = Some(OfferPage::new(self.shop.clone()));
             }
@@ -152,17 +162,12 @@ impl ShopPage {
     fn draw_self(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
         let [content_area, menu_area] = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
-            .constraints([
-                Constraint::Fill(1), 
-                Constraint::Length(3)])
+            .constraints([Constraint::Fill(1), Constraint::Length(3)])
             .areas(area);
-        
+
         let [inventory_area, details_area] = Layout::default()
             .direction(ratatui::layout::Direction::Horizontal)
-            .constraints([
-                Constraint::Fill(1),
-                Constraint::Fill(1), 
-            ])
+            .constraints([Constraint::Fill(1), Constraint::Fill(1)])
             .areas(content_area);
 
         let table = Table::new(
@@ -173,9 +178,10 @@ impl ShopPage {
                 .map(|item| Row::new(vec![item.rarity.as_string(), item.name.clone()])),
             [1, 50],
         )
-        .block(Block::bordered()
-            .title(self.shop.borrow().name.clone())
-            .border_type(self.border_type_for_area(FocusedArea::Inventory))
+        .block(
+            Block::bordered()
+                .title(self.shop.borrow().name.clone())
+                .border_type(self.border_type_for_area(FocusedArea::Inventory)),
         )
         //.row_highlight_style(Style::new().white().on_green())
         .highlight_symbol(">> ")
@@ -201,27 +207,31 @@ impl ShopPage {
         self.detail_height = paragraph_block.inner(area).height;
 
         let nice_paragraph = Paragraph::new(text)
-            .wrap(Wrap {trim: true})
+            .wrap(Wrap { trim: true })
             .scroll((self.detail_scroll, 0))
             .block(paragraph_block);
 
         frame.render_widget(nice_paragraph, details_area);
 
-        let scroll_bar = Scrollbar::default()
-            .orientation(ratatui::widgets::ScrollbarOrientation::VerticalRight);
+        let scroll_bar =
+            Scrollbar::default().orientation(ratatui::widgets::ScrollbarOrientation::VerticalRight);
 
-        frame.render_stateful_widget(scroll_bar, details_area.inner(Margin { vertical: 1, horizontal: 0 }), &mut self.detail_scroll_state);
+        frame.render_stateful_widget(
+            scroll_bar,
+            details_area.inner(Margin {
+                vertical: 1,
+                horizontal: 0,
+            }),
+            &mut self.detail_scroll_state,
+        );
 
-        let menu_bar = Paragraph::new(Text::from(vec![
-            Line::from(vec![
-                Span::raw("o").black().on_white().into(),
-                Span::raw(" generate offer").into()
-            ])
-        ]))
-            .centered();
+        let menu_bar = Paragraph::new(Text::from(vec![Line::from(vec![
+            Span::raw("o").black().on_white().into(),
+            Span::raw(" generate offer").into(),
+        ])]))
+        .centered();
 
         frame.render_widget(menu_bar, menu_area);
-
     }
 }
 
@@ -238,30 +248,39 @@ impl RenderablePage for ShopPage {
         }
     }
 
-    fn handle_and_transact(
-        &mut self,
-        event: &Event,
-    ) {
+    fn handle_and_transact(&mut self, event: &Event) {
         if let Some(ref mut page) = &mut self.overlay_page {
             page.handle_and_transact(event);
         } else {
             if let Event::Key(key_event) = &event {
                 log::debug!("ShopPage handled event {:?}", key_event);
-    
+
                 match key_event.code {
-                    KeyCode::Up if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::ScrollUp),
-                    KeyCode::Down if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::ScrollDown),
-                    KeyCode::PageUp if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::PageUp),
-                    KeyCode::PageDown if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::PageDown),
-                    KeyCode::Right if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::ShiftFocusForward),
-                    KeyCode::Left if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::ShiftFocusBackward),
-                    KeyCode::Char('o') if key_event.kind == KeyEventKind::Press => self.transactions.push_back(Transaction::CreateOffer),
+                    KeyCode::Up if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::ScrollUp)
+                    }
+                    KeyCode::Down if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::ScrollDown)
+                    }
+                    KeyCode::PageUp if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::PageUp)
+                    }
+                    KeyCode::PageDown if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::PageDown)
+                    }
+                    KeyCode::Right if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::ShiftFocusForward)
+                    }
+                    KeyCode::Left if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::ShiftFocusBackward)
+                    }
+                    KeyCode::Char('o') if key_event.kind == KeyEventKind::Press => {
+                        self.transactions.push_back(Transaction::CreateOffer)
+                    }
                     _ => {}
                 };
             }
         }
         self.perform_transactions();
     }
-    
-
 }

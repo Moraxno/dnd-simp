@@ -1,7 +1,6 @@
-
 use layout::Flex;
 use ratatui::prelude::*;
-use ratatui::widgets::canvas::{Shape};
+use ratatui::widgets::canvas::Shape;
 use ratatui::widgets::{Borders, Padding};
 use ratatui::{
     crossterm::{
@@ -15,7 +14,7 @@ use ratatui::{
 use style::palette::material::{GRAY as SLATE, RED};
 
 use crate::campaign::WorkCampaign;
-use crate::{data::shop::Shop};
+use crate::data::shop::Shop;
 
 use super::home::HomePage;
 use super::page::RenderablePage;
@@ -212,7 +211,7 @@ impl App {
             }
             _ => {}
         };
-        
+
         Ok(())
     }
 

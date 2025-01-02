@@ -1,4 +1,7 @@
-use ratatui::{style::{Style, Stylize}, text::Span};
+use ratatui::{
+    style::{Style, Stylize},
+    text::Span,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::ui::display::AsRatatuiSpan;
@@ -58,7 +61,11 @@ impl AsRatatuiSpan for Rarity {
 
 impl ItemType {
     pub fn new(name: String, rarity: Rarity, details: String) -> Self {
-        Self { name, rarity, details }
+        Self {
+            name,
+            rarity,
+            details,
+        }
     }
 }
 
@@ -94,8 +101,7 @@ impl ItemRegistry {
     }
 }
 
-
 pub enum ItemQuantity {
     Stocked(u64),
-    Infinite
+    Infinite,
 }

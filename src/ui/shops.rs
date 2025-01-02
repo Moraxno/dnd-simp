@@ -49,23 +49,21 @@ impl ShopsPage {
 
         frame.render_stateful_widget(table, area, &mut self.shop_table_state);
     }
-    
+
     fn handle_shopspage_event(&mut self, event: &Event) {
         match event {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 match key_event.code {
                     KeyCode::Up => {
                         self.shop_table_state.scroll_up_by(1);
-    
                     }
                     KeyCode::Down => {
                         self.shop_table_state.scroll_down_by(1);
-    
                     }
                     KeyCode::Enter => {
                         let opt_idx = self.shop_table_state.selected();
-    
-                        if let Some(idx)= opt_idx {
+
+                        if let Some(idx) = opt_idx {
                             let shop = Rc::clone(&self.shops[idx]);
                             self.open_shop_page = Some(ShopPage::new(shop));
                         }
@@ -76,10 +74,9 @@ impl ShopsPage {
                     _ => {}
                 }
             }
-            _ => {},
+            _ => {}
         }
     }
-
 }
 
 impl RenderablePage for ShopsPage {

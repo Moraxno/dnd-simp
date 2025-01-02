@@ -12,11 +12,10 @@ mod ui;
 
 mod state;
 
-
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
-use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{Appender, Config, Root};
+use log4rs::encode::pattern::PatternEncoder;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -40,14 +39,18 @@ fn load_campaign_file(maybe_filepath: Option<String>) -> anyhow::Result<Campaign
 
 pub fn setup_logger() -> anyhow::Result<()> {
     let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{d(%Y-%m-%d %H:%M:%S)} [{l}] @ [{f}:{L}]: {m}{n}")))
+        .encoder(Box::new(PatternEncoder::new(
+            "{d(%Y-%m-%d %H:%M:%S)} [{l}] @ [{f}:{L}]: {m}{n}",
+        )))
         .build("logs/output.log")?;
 
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder()
+        .build(
+            Root::builder()
                 .appender("logfile")
-                .build(LevelFilter::Debug))?;
+                .build(LevelFilter::Debug),
+        )?;
 
     log4rs::init_config(config)?;
 

@@ -131,7 +131,11 @@ pub fn dnd5eapi_to_itemtype(item: &Dnd5eApiItem) -> anyhow::Result<ItemType> {
         _ => anyhow::bail!("Invalid rarity string encountered."),
     };
 
-    Ok(ItemType::new(item.name.clone(), rarity, item.desc.join("\n")))
+    Ok(ItemType::new(
+        item.name.clone(),
+        rarity,
+        item.desc.join("\n"),
+    ))
 }
 
 pub struct Dnd5eApiRequester {}

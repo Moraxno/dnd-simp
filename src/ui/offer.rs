@@ -1,6 +1,11 @@
 use std::{cell::RefCell, cmp::min, rc::Rc};
 
-use ratatui::{crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind}, layout::{Constraint, Layout, Rect}, text::Line, widgets::{Block, Paragraph}};
+use ratatui::{
+    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    layout::{Constraint, Layout, Rect},
+    text::Line,
+    widgets::{Block, Paragraph},
+};
 
 use crate::{data::shop::Shop, registry::ItemType};
 
@@ -23,7 +28,11 @@ impl OfferPage {
             .into_iter()
             .map(|item| item.clone())
             .collect();
-        Self { shop, current_offer, offer_idx: 0 }
+        Self {
+            shop,
+            current_offer,
+            offer_idx: 0,
+        }
     }
 }
 
@@ -38,17 +47,21 @@ impl RenderablePage for OfferPage {
             .constraints([Constraint::Fill(1); 3])
             .areas(area);
 
-        for (idx, (offer_area, item)) in offer_areas.into_iter().zip(self.current_offer.iter()).enumerate() {
+        for (idx, (offer_area, item)) in offer_areas
+            .into_iter()
+            .zip(self.current_offer.iter())
+            .enumerate()
+        {
             let block = if idx == self.offer_idx {
                 Block::bordered().border_type(ratatui::widgets::BorderType::Thick)
             } else {
                 Block::bordered().border_type(ratatui::widgets::BorderType::Plain)
             };
-            
+
             let par = Paragraph::new(vec![
                 Line::raw(item.name.clone()),
                 Line::from(item.rarity.as_span()),
-                Line::raw(item.details.clone())
+                Line::raw(item.details.clone()),
             ])
             .block(block);
 
@@ -65,7 +78,7 @@ impl RenderablePage for OfferPage {
             match key_event.code {
                 KeyCode::Right => self.offer_idx = min(2, self.offer_idx + 1),
                 KeyCode::Left => self.offer_idx = self.offer_idx.saturating_sub(1),
-                _ => {},
+                _ => {}
             }
         }
     }

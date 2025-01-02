@@ -12,12 +12,19 @@ use mockall::*;
 use crate::registry::ItemType;
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
+struct Dnd5eApiItemVariant {
+    index: String,
+    name: String,
+    url: String,
+}
+
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct Dnd5eApiItem {
     index: String,
     name: String,
     equipment_category: Dnd5eApiEquipmentCategory,
     rarity: Dnd5eApiItemRarity,
-    variants: Vec<()>,
+    variants: Vec<Dnd5eApiItemVariant>,
     variant: bool,
     desc: Vec<String>,
     url: String,
@@ -124,7 +131,7 @@ pub fn dnd5eapi_to_itemtype(item: &Dnd5eApiItem) -> anyhow::Result<ItemType> {
         _ => anyhow::bail!("Invalid rarity string encountered."),
     };
 
-    Ok(ItemType::new(item.name.clone(), rarity))
+    Ok(ItemType::new(item.name.clone(), rarity, item.desc.join("\n")))
 }
 
 pub struct Dnd5eApiRequester {}

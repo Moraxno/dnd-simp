@@ -1,4 +1,7 @@
+use ratatui::{style::{Style, Stylize}, text::Span};
 use serde::{Deserialize, Serialize};
+
+use crate::ui::display::AsRatatuiSpan;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Rarity {
@@ -12,6 +15,7 @@ pub enum Rarity {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemType {
     pub name: String,
+    pub details: String,
     pub rarity: Rarity,
 }
 
@@ -39,9 +43,22 @@ impl Rarity {
     }
 }
 
+impl AsRatatuiSpan for Rarity {
+    fn as_span(&self) -> Span {
+        let mut base_span = Span::raw(self.as_string());
+        match self {
+            Rarity::Common => base_span.style(Style::default().gray().italic()),
+            Rarity::Rare => base_span.style(Style::default().white().italic()),
+            Rarity::VeryRare => base_span.style(Style::default().magenta().italic()),
+            Rarity::Legendary => base_span.style(Style::default().red().italic()),
+            Rarity::Artifact => base_span.style(Style::default().red().italic()),
+        }
+    }
+}
+
 impl ItemType {
-    pub fn new(name: String, rarity: Rarity) -> Self {
-        Self { name, rarity }
+    pub fn new(name: String, rarity: Rarity, details: String) -> Self {
+        Self { name, rarity, details }
     }
 }
 
@@ -75,4 +92,10 @@ impl ItemRegistry {
     pub fn from_reader<R: std::io::Read>(yaml_reader: R) -> anyhow::Result<Self> {
         Ok(serde_yaml::from_reader(yaml_reader)?)
     }
+}
+
+
+pub enum ItemQuantity {
+    Stocked(u64),
+    Infinite
 }

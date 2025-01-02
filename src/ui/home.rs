@@ -1,7 +1,7 @@
-use std::cmp::min;
+use std::{cmp::{max, min}, };
 
 use ratatui::{
-    crossterm::event::Event,
+    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{palette::material::WHITE, Color},
     symbols::Marker,
@@ -16,11 +16,13 @@ use super::page::RenderablePage;
 
 pub struct HomePage {
     color: Color,
+
+    scale: f32,
 }
 
 impl HomePage {
     pub fn new() -> Self {
-        Self { color: WHITE }
+        Self { color: WHITE, scale: 10.0 }
     }
 }
 
@@ -46,7 +48,7 @@ impl<'a> RenderablePage for HomePage {
             .block(Block::bordered())
             .marker(Marker::Braille)
             .paint(|ctx| {
-                render_d20(ctx, 10.0, self.color);
+                render_d20(ctx, self.scale.into(), self.color);
             })
             .x_bounds([-20.0, 20.0])
             .y_bounds([-20.0, 20.0]);
@@ -54,8 +56,23 @@ impl<'a> RenderablePage for HomePage {
         frame.render_widget(c, draw_area);
     }
 
-    fn handle_and_transact(&mut self, event: Event) -> Option<Event> {
-        Some(event)
+    fn handle_and_transact(&mut self, event: &Event) {
+        if let Event::Key(key_event) = event {
+            if key_event.kind != KeyEventKind::Press {
+                return;
+            }
+
+            match key_event.code {
+                KeyCode::Up => self.scale += 1.0,
+                KeyCode::Down => {
+                    self.scale -= 1.0;
+                    if self.scale < 1.0 {
+                        self.scale = 1.0; 
+                    }
+                },
+                _ => {},
+            }
+        }
     }
 }
 

@@ -202,19 +202,17 @@ impl App {
 
     fn handle_events(&mut self) -> anyhow::Result<()> {
         let ev = event::read()?;
-        let option_ev = self.current_overlay().handle_and_transact(ev);
+        self.current_overlay().handle_and_transact(&ev);
 
-        if let Some(ev) = option_ev {
-            match ev {
-                // it's important to check that the event is a key press event as
-                // crossterm also emits key release and repeat events on Windows.
-                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                    self.handle_key_event(key_event)
-                }
-                _ => {}
-            };
-        }
-
+        match ev {
+            // it's important to check that the event is a key press event as
+            // crossterm also emits key release and repeat events on Windows.
+            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                self.handle_key_event(key_event)
+            }
+            _ => {}
+        };
+        
         Ok(())
     }
 
@@ -245,8 +243,8 @@ impl App {
                 //         KeyCode::Esc => self.overlay = None,
                 // KeyCode::Up => self.registry_state.scroll_up_by(1),
                 // KeyCode::Down => self.registry_state.scroll_down_by(1),
-                KeyCode::Right => self.messages.push(AppMessage::NextCategory),
-                KeyCode::Left => self.messages.push(AppMessage::PreviousCategory),
+                KeyCode::Tab => self.messages.push(AppMessage::NextCategory),
+                KeyCode::BackTab => self.messages.push(AppMessage::PreviousCategory),
                 _ => {}
             }
         }

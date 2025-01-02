@@ -52,7 +52,7 @@ impl From<Campaign> for WorkCampaign {
 
 #[cfg(test)]
 mod tests {
-    use super::Campaign;
+    use crate::WorkCampaign;
 
     #[test]
     fn new_campaign_is_empty() {

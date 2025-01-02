@@ -57,8 +57,8 @@ mod tests {
     }
 
     #[test]
-    fn shop_offer_is_less_or_equal_to_three() {
+    fn shop_offer_is_less_or_equal_to_demand() {
         let s = Shop::new("Tina's".to_string());
-        assert!(s.produce_offer().len() <= 3)
+        assert!(s.produce_offer(3).len() <= 3)
     }
 }

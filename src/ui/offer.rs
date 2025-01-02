@@ -1,4 +1,4 @@
-use std::{cell::RefCell, cmp::min, rc::Rc, str::FromStr};
+use std::{cell::RefCell, cmp::min, rc::Rc};
 
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEventKind},
@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{display::AsRatatuiSpan, page::RenderablePage};
-use tyche::{Dice, Expr};
+use tyche::Expr;
 
 #[derive(Debug)]
 struct Offer {
@@ -78,7 +78,7 @@ impl OfferPage {
 
                 Offer {
                     item: offer.item.clone(),
-                    price: price,
+                    price,
                 }
             })
             .collect();

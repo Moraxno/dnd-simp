@@ -20,6 +20,7 @@ log = "0.4.22"
 tui-markdown = "0.2.10"
 strum = { version = "0.26.3", features = ["strum_macros", "derive"] }
 strum_macros = "0.26.4"
+tyche = "0.2.0"
 
 [dev-dependencies]
 mockall = "0.13.1"

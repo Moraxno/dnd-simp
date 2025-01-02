@@ -1,7 +1,7 @@
-use std::cmp::{max, min};
+use std::cmp::min;
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{palette::material::WHITE, Color},
     symbols::Marker,

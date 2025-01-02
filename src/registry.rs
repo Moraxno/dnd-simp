@@ -48,7 +48,7 @@ impl Rarity {
 
 impl AsRatatuiSpan for Rarity {
     fn as_span(&self) -> Span {
-        let mut base_span = Span::raw(self.as_string());
+        let base_span = Span::raw(self.as_string());
         match self {
             Rarity::Common => base_span.style(Style::default().gray().italic()),
             Rarity::Rare => base_span.style(Style::default().white().italic()),

@@ -1,7 +1,7 @@
 use std::{cell::RefCell, cmp::min, rc::Rc};
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Layout, Rect},
     text::Line,
     widgets::{Block, Paragraph},
@@ -25,8 +25,7 @@ impl OfferPage {
         let current_offer = shop
             .borrow()
             .produce_offer(3)
-            .into_iter()
-            .map(|item| item.clone())
+            .into_iter().cloned()
             .collect();
         Self {
             shop,
@@ -38,7 +37,7 @@ impl OfferPage {
 
 impl RenderablePage for OfferPage {
     fn title(&self) -> String {
-        String::from(format!("Offer for {}", self.shop.borrow().name))
+        format!("Offer for {}", self.shop.borrow().name)
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {

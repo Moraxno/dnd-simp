@@ -1,22 +1,20 @@
-use std::{cell::RefCell, cmp::min, ops::AddAssign, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
+    crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Layout, Margin},
-    style::{Style, Stylize},
+    style::Stylize,
     text::{Line, Span, Text},
     widgets::{
         Block, BorderType, Paragraph, Row, Scrollbar, ScrollbarState, Table, TableState, Wrap,
     },
 };
-use serde::de;
 
 use crate::{data::shop::Shop, registry::ItemType};
 
 use super::{offer::OfferPage, page::RenderablePage};
 
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
 use tui_markdown;
 
 use std::collections::VecDeque;
@@ -226,8 +224,8 @@ impl ShopPage {
         );
 
         let menu_bar = Paragraph::new(Text::from(vec![Line::from(vec![
-            Span::raw("o").black().on_white().into(),
-            Span::raw(" generate offer").into(),
+            Span::raw("o").black().on_white(),
+            Span::raw(" generate offer"),
         ])]))
         .centered();
 
@@ -251,35 +249,33 @@ impl RenderablePage for ShopPage {
     fn handle_and_transact(&mut self, event: &Event) {
         if let Some(ref mut page) = &mut self.overlay_page {
             page.handle_and_transact(event);
-        } else {
-            if let Event::Key(key_event) = &event {
-                log::debug!("ShopPage handled event {:?}", key_event);
+        } else if let Event::Key(key_event) = &event {
+            log::debug!("ShopPage handled event {:?}", key_event);
 
-                match key_event.code {
-                    KeyCode::Up if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::ScrollUp)
-                    }
-                    KeyCode::Down if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::ScrollDown)
-                    }
-                    KeyCode::PageUp if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::PageUp)
-                    }
-                    KeyCode::PageDown if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::PageDown)
-                    }
-                    KeyCode::Right if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::ShiftFocusForward)
-                    }
-                    KeyCode::Left if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::ShiftFocusBackward)
-                    }
-                    KeyCode::Char('o') if key_event.kind == KeyEventKind::Press => {
-                        self.transactions.push_back(Transaction::CreateOffer)
-                    }
-                    _ => {}
-                };
-            }
+            match key_event.code {
+                KeyCode::Up if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::ScrollUp)
+                }
+                KeyCode::Down if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::ScrollDown)
+                }
+                KeyCode::PageUp if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::PageUp)
+                }
+                KeyCode::PageDown if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::PageDown)
+                }
+                KeyCode::Right if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::ShiftFocusForward)
+                }
+                KeyCode::Left if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::ShiftFocusBackward)
+                }
+                KeyCode::Char('o') if key_event.kind == KeyEventKind::Press => {
+                    self.transactions.push_back(Transaction::CreateOffer)
+                }
+                _ => {}
+            };
         }
         self.perform_transactions();
     }

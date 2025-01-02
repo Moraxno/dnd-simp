@@ -249,10 +249,7 @@ impl App {
         }
 
         // Always allow to quit
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            _ => {}
-        }
+        if let KeyCode::Char('q') = key_event.code { self.exit() }
     }
 }
 

@@ -1,2 +1,2 @@
-pub mod shop;
 pub mod gold;
+pub mod shop;

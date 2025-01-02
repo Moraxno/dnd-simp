@@ -65,7 +65,7 @@ impl AsRatatuiSpan for Rarity {
 
 impl HasCostExpression for ItemType {
     fn price_expr(&self) -> String {
-        match self.rarity	 {
+        match self.rarity {
             Rarity::Common => "(1d6 + 1) * 10".into(),
             Rarity::Uncommon => "1d6 * 100".into(),
             Rarity::Rare => "2d10 * 1000".into(),

@@ -249,7 +249,9 @@ impl App {
         }
 
         // Always allow to quit
-        if let KeyCode::Char('q') = key_event.code { self.exit() }
+        if let KeyCode::Char('q') = key_event.code {
+            self.exit()
+        }
     }
 }
 

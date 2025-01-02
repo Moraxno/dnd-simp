@@ -7,8 +7,11 @@ use ratatui::{
     widgets::{Block, Paragraph},
 };
 
-use crate::{data::{gold::GoldAmount, shop::Shop}, registry::ItemType};
 use crate::ui::display::HasCostExpression;
+use crate::{
+    data::{gold::GoldAmount, shop::Shop},
+    registry::ItemType,
+};
 
 use super::{display::AsRatatuiSpan, page::RenderablePage};
 use tyche::{Dice, Expr};
@@ -33,8 +36,12 @@ impl OfferPage {
         let current_offer = shop
             .borrow()
             .produce_offer(3)
-            .into_iter().cloned()
-            .map(|i| Offer { item: i, price: None })
+            .into_iter()
+            .cloned()
+            .map(|i| Offer {
+                item: i,
+                price: None,
+            })
             .collect();
         Self {
             shop,
@@ -44,7 +51,8 @@ impl OfferPage {
     }
 
     pub fn realize_prices(&mut self) {
-        self.current_offer = self.current_offer
+        self.current_offer = self
+            .current_offer
             .iter()
             .map(|offer| {
                 let opt_d_expr: Result<Expr, _> = offer.item.price_expr().as_str().parse();
@@ -70,7 +78,7 @@ impl OfferPage {
 
                 Offer {
                     item: offer.item.clone(),
-                    price: price
+                    price: price,
                 }
             })
             .collect();
@@ -95,10 +103,7 @@ impl RenderablePage for OfferPage {
         {
             let [upper_area, lower_area] = Layout::default()
                 .direction(ratatui::layout::Direction::Vertical)
-                .constraints([
-                    Constraint::Fill(1),
-                    Constraint::Length(3),
-                ])
+                .constraints([Constraint::Fill(1), Constraint::Length(3)])
                 .areas(offer_area);
 
             let block = if idx == self.offer_idx {
@@ -117,16 +122,14 @@ impl RenderablePage for OfferPage {
             frame.render_widget(par, upper_area);
 
             let l = if let Some(price) = &offer.price {
-                Line::from(vec![
-                    Span::raw("Price: "),
-                    Span::raw(price.to_string()),
-                ]).centered()
+                Line::from(vec![Span::raw("Price: "), Span::raw(price.to_string())]).centered()
             } else {
                 Line::from(vec![
                     Span::raw("Price: "),
                     Span::raw(offer.item.price_expr()),
                     Span::raw(" gp"),
-                ]).centered()
+                ])
+                .centered()
             };
 
             frame.render_widget(l, lower_area);

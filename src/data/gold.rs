@@ -18,9 +18,7 @@ impl GoldAmount {
             .saturating_add(silver_copper)
             .saturating_add(copper);
 
-        Self {
-            copper: all_copper
-        }
+        Self { copper: all_copper }
     }
 
     pub fn gold(&self) -> Gold {
@@ -80,8 +78,13 @@ impl ToString for GoldAmount {
             (0, _, 0) => self.silver_str(),
             (_, 0, 0) => self.gold_str(),
             (0, _, _) => format!("{} {}", self.silver_str(), self.copper_str()),
-            (_, _, 0) => format!("{} {}",  self.gold_str(), self.silver_str()),
-            (_, _, _) => format!("{}, {} {}", self.gold_str(), self.silver_str(), self.copper_str()),
+            (_, _, 0) => format!("{} {}", self.gold_str(), self.silver_str()),
+            (_, _, _) => format!(
+                "{}, {} {}",
+                self.gold_str(),
+                self.silver_str(),
+                self.copper_str()
+            ),
         }
     }
 }
@@ -91,24 +94,24 @@ impl Add for GoldAmount {
 
     fn add(self, rhs: Self) -> Self::Output {
         Self::Output {
-            copper: self.copper + rhs.copper
+            copper: self.copper + rhs.copper,
         }
     }
 }
 
 impl Mul<isize> for GoldAmount {
     type Output = Self;
-    
+
     fn mul(self, rhs: isize) -> Self::Output {
         Self::Output {
-            copper: self.copper * rhs
+            copper: self.copper * rhs,
         }
     }
 }
 
 impl Neg for GoldAmount {
     type Output = Self;
-    
+
     fn neg(self) -> Self::Output {
         self * -1
     }

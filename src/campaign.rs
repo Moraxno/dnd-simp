@@ -81,11 +81,11 @@ impl<'a> Campaign<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::WorkCampaign;
+    use crate::CampaignFolder;
 
     #[test]
     fn new_campaign_is_empty() {
-        let e = Campaign::new("New Campaign".into());
+        let e = CampaignFolder::empty("New Campaign".into());
         assert_eq!(e.shops.len(), 0)
     }
 }

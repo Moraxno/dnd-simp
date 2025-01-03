@@ -11,9 +11,9 @@ use ratatui::{
     widgets::{Block, Clear, Paragraph, TableState},
     DefaultTerminal, Frame,
 };
-use style::palette::material::{GRAY as SLATE, RED};
+use style::palette::material::{self, AccentedPalette, BLACK, BLUE, GRAY as SLATE, GREEN, RED, WHITE};
 
-use crate::campaign::FileCampaign;
+use crate::campaign::{Campaign, FileMeta};
 use crate::data::shop::Shop;
 
 use super::characters::CharactersPage;
@@ -29,13 +29,15 @@ enum AppPopup {
 
 struct App<'a> {
     // registry: ItemRegistry,
-    name: String,
+    campaign: &'a Campaign<'a>,
+
     registry_state: TableState,
     is_running: bool,
 
     overlay: Option<Box<dyn AppScreen>>,
 
     pages: Vec<Box<dyn RenderablePage>>,
+    tabs: Vec<Tab<'a>>,
 
     selected_tab: usize,
 
@@ -62,13 +64,42 @@ pub enum AppMessage {
     NextCategory,
 }
 
+pub struct Tab<'a> {
+    title: String,
+    build_page: &'a dyn Fn(&'static mut Campaign) -> Box<dyn RenderablePage>,
+    color: AccentedPalette
+}
+
+impl<'a> Tab<'a> {
+    pub fn new(title: String,
+        build_page: &'a dyn Fn(&'static mut Campaign) -> Box<dyn RenderablePage>,
+        color: AccentedPalette) -> Self {
+            Self {
+                title, build_page, color
+            }
+        }
+}
+
+pub fn home_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
+    Box::new(HomePage::new())
+}
+
+pub fn char_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
+    Box::new(CharactersPage::new(camp.characters.iter().collect()))
+}
+
+
 impl<'a> App<'a> {
-    pub fn new(campaign: &'static mut FileCampaign, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
+    pub fn new(campaign: &'static mut Campaign, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
         Ok(Self {
-            name: campaign.name.clone(),
+            campaign,
             registry_state: TableState::default().with_selected(Some(0)),
             is_running: true,
             overlay: None,
+            tabs: vec![
+                Tab::new("Home".into(), &home_wrapper, BLUE),
+                Tab::new("Characters".into(), &char_wrapper, RED),
+            ],
             pages: vec![
                 Box::new(HomePage::new()),
                 Box::new(ShopsPage::new(campaign.shops.clone())),
@@ -83,6 +114,10 @@ impl<'a> App<'a> {
             messages: vec![],
             i18n
         })
+    }
+
+    pub fn name(&self) -> &String {
+        &self.campaign.name
     }
 
     pub fn exit(&mut self) {
@@ -140,7 +175,7 @@ impl<'a> App<'a> {
             .constraints(vec![
                 Constraint::Length(APP_TITLE.len() as u16 + 2),
                 Constraint::Length(1),
-                Constraint::Length(self.name.len() as u16 + 2),
+                Constraint::Length(self.name().len() as u16 + 2),
                 Constraint::Length(1),
                 Constraint::Fill(1),
             ])
@@ -151,24 +186,27 @@ impl<'a> App<'a> {
             .bg(Color::Blue);
         frame.render_widget(app_name, app_name_area);
 
-        let campaign_name = ratatui::widgets::Paragraph::new(self.name.as_str())
+        let campaign_name = ratatui::widgets::Paragraph::new(self.name().as_str())
             .alignment(Alignment::Center)
             .bold()
             .bg(Color::Yellow);
         frame.render_widget(campaign_name, campaign_name_area);
 
-        let object_ident = ratatui::widgets::Paragraph::new(self.name.as_str())
+        let object_ident = ratatui::widgets::Paragraph::new(self.name().as_str())
             .alignment(Alignment::Center)
             .bg(Color::Grey);
         frame.render_widget(object_ident, object_ident_area);
 
         let page_tabs = ratatui::widgets::Tabs::new(
-            self.pages
+            self.tabs
                 .iter()
-                .map(|page| ratatui::text::Line::raw(format!("  {}  ", page.title()))),
-        )
+                .enumerate()
+                .map(|(idx, tab)| ratatui::text::Line::raw(format!("  {}  ", tab.title))
+                    .bg(if idx == self.selected_tab {
+                        tab.color.a100 } else { tab.color.c900 })
+        ))
         .select(self.selected_tab)
-        .highlight_style(Style::new().fg(SLATE.c300).bg(RED.a100))
+        .highlight_style(Style::default())
         .padding("", "")
         .divider("");
 
@@ -394,7 +432,7 @@ fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-pub fn run_app(campaign: &'static mut FileCampaign, i18n: &dyn I18ner) -> anyhow::Result<()> {
+pub fn run_app(campaign: &'static mut Campaign, i18n: &dyn I18ner) -> anyhow::Result<()> {
     let mut terminal = ratatui::init();
     let mut app = App::new(campaign, i18n)?;
     let app_result = app.run(&mut terminal);

@@ -10,6 +10,13 @@ pub struct Shop {
     inventory: Vec<ItemType>,
 }
 
+
+//@todo implement this properly
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileShop {
+
+}
+
 impl Shop {
     pub fn new(name: String) -> Self {
         Self {

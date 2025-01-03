@@ -1,12 +1,11 @@
 use ratatui::{layout::{Constraint, Layout}, widgets::{Row, Table, TableState}};
 
-use crate::data::character::Character;
+use crate::data::{character::Character, item::Item};
 
 use super::{flow::KeyHandler, key::KeyMenu, page::RenderablePage};
 
 pub struct CharactersPage<'a> {
-    pub characters: Vec<&'a Character>,
-
+    pub characters: Vec<&'a Character<'a>>,
     character_table_state: TableState,
 }
 
@@ -50,8 +49,12 @@ impl<'a> RenderablePage for CharactersPage<'a> {
         let wish_list = match self.selected_character() {
             Some(char) => { char.wish_list
                 .iter()
-                .map(|item| 
-                    Row::new(vec![item.name.clone()]))
+                .filter_map(|item|
+                    if let Item::Concrete(item_type) = item {
+                        Some(Row::new(vec![item_type.name.clone()]))
+                    } else {
+                        None
+                    })
                 .collect() },
             None => vec![],
         };

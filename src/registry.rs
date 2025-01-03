@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{data::item::ItemIdentifier, ui::display::AsRatatuiSpan};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Rarity {
     Common,
     Uncommon,
@@ -18,7 +18,7 @@ pub enum Rarity {
     Artifact,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ItemCategory {
     WondrousItem,
     SimpleWeapon,

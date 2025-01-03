@@ -2,17 +2,17 @@ use std::{cell::RefCell, rc::Rc};
 
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEventKind},
-    layout::{Constraint, Layout, Margin},
+    layout::{Constraint, Layout, Margin, Rect},
     style::Stylize,
     text::{Line, Span, Text},
     widgets::{
         Block, BorderType, Paragraph, Row, Scrollbar, ScrollbarState, Table, TableState, Wrap,
-    },
+    }, Frame,
 };
 
 use crate::{data::shop::Shop, registry::ItemType};
 
-use super::{offer::OfferPage, page::RenderablePage};
+use super::{offer::OfferPage, page::RenderablePage, translator::I18ner};
 
 use strum::IntoEnumIterator;
 use tui_markdown;
@@ -157,7 +157,7 @@ impl ShopPage {
         }
     }
 
-    fn draw_self(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+    fn draw_self(&mut self, frame: &mut Frame, area: Rect, i18n: &dyn I18ner) {
         let [content_area, menu_area] = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints([Constraint::Fill(1), Constraint::Length(3)])
@@ -173,7 +173,7 @@ impl ShopPage {
                 .borrow()
                 .get_inventory()
                 .iter()
-                .map(|item| Row::new(vec![item.rarity.as_string(), item.name.clone()])),
+                .map(|item| Row::new(vec![item.rarity.to_string(), item.name.clone()])),
             [1, 50],
         )
         .block(
@@ -238,15 +238,25 @@ impl RenderablePage for ShopPage {
         self.shop.borrow().name.clone()
     }
 
-    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect, i18n: &dyn I18ner) {
         if let Some(ref mut page) = &mut self.overlay_page {
-            page.draw(frame, area);
+            page.draw(frame, area, i18n);
         } else {
-            self.draw_self(frame, area);
+            self.draw_self(frame, area, i18n);
         }
     }
 
     fn handle_and_transact(&mut self, event: &Event) {
+        if let Event::Key(key_event) = &event {
+            match key_event.code {
+                KeyCode::Esc if key_event.kind == KeyEventKind::Press => {
+                    self.overlay_page = None;
+                    return;
+                },
+                _ => {},
+            }
+        }
+
         if let Some(ref mut page) = &mut self.overlay_page {
             page.handle_and_transact(event);
         } else if let Event::Key(key_event) = &event {

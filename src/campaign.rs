@@ -2,16 +2,24 @@ use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::data::shop::Shop;
+use crate::data::{character::Character, shop::Shop};
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum FileStorageVersion {
+    V1,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Campaign {
+pub struct FileCampaign {
     pub name: String,
     pub shops: Vec<Shop>,
+
+
 }
 
 pub struct WorkCampaign {
     pub name: String,
+    pub characters: Vec<Character>,
     pub shops: Vec<Rc<RefCell<Shop>>>,
 }
 
@@ -19,12 +27,13 @@ impl WorkCampaign {
     pub fn new(name: String) -> Self {
         Self {
             name,
+            characters: vec![],
             shops: vec![],
         }
     }
 }
 
-impl From<WorkCampaign> for Campaign {
+impl From<WorkCampaign> for FileCampaign {
     fn from(value: WorkCampaign) -> Self {
         Self {
             name: value.name,
@@ -37,10 +46,11 @@ impl From<WorkCampaign> for Campaign {
     }
 }
 
-impl From<Campaign> for WorkCampaign {
-    fn from(value: Campaign) -> Self {
+impl From<FileCampaign> for WorkCampaign {
+    fn from(value: FileCampaign) -> Self {
         Self {
             name: value.name,
+            characters: vec![],
             shops: value
                 .shops
                 .into_iter()

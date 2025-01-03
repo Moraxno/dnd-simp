@@ -1,16 +1,14 @@
 use std::{cell::RefCell, rc::Rc};
 
 use ratatui::{
-    crossterm::event::{Event, KeyCode, KeyEventKind},
-    style::{palette::material::GREEN, Style, Stylize},
-    widgets::{Block, Row, Table, TableState},
+    crossterm::event::{Event, KeyCode, KeyEventKind}, layout::Rect, style::{palette::material::GREEN, Style, Stylize}, widgets::{Block, Row, Table, TableState}
 };
 
 use crate::data::shop::Shop;
 
 use crate::ui::page::RenderablePage;
 
-use super::shop::ShopPage;
+use super::{shop::ShopPage, translator::I18ner};
 
 pub struct ShopsPage {
     shops: Vec<Rc<RefCell<Shop>>>,
@@ -32,7 +30,7 @@ impl ShopsPage {
         }
     }
 
-    fn draw_self(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+    fn draw_self(&mut self, frame: &mut ratatui::Frame, area: Rect, i18n: &dyn I18ner) {
         let table = Table::new(
             self.shops.iter().map(|shop| {
                 let s = shop.borrow().name.clone();
@@ -84,11 +82,11 @@ impl RenderablePage for ShopsPage {
         "Shops".into()
     }
 
-    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect) {
+    fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect, i18n: &dyn I18ner) {
         if let Some(ref mut page) = self.open_shop_page {
-            page.draw(frame, area);
+            page.draw(frame, area, i18n);
         } else {
-            self.draw_self(frame, area);
+            self.draw_self(frame, area, i18n);
         }
     }
 

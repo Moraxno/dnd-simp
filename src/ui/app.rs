@@ -13,18 +13,21 @@ use ratatui::{
 };
 use style::palette::material::{GRAY as SLATE, RED};
 
-use crate::campaign::WorkCampaign;
+use crate::campaign::FileCampaign;
 use crate::data::shop::Shop;
 
+use super::characters::CharactersPage;
 use super::home::HomePage;
 use super::page::RenderablePage;
+use super::settings::SettingsPage;
 use super::shops::ShopsPage;
+use crate::ui::translator::I18ner;
 
 enum AppPopup {
     WhatToDoWithShop { index: usize },
 }
 
-struct App {
+struct App<'a> {
     // registry: ItemRegistry,
     name: String,
     registry_state: TableState,
@@ -37,15 +40,18 @@ struct App {
     selected_tab: usize,
 
     messages: Vec<AppMessage>,
+
+    i18n: &'a dyn I18ner
 }
 
 #[derive(Debug, Clone)]
 pub enum AppCategory {
     Shops,
     Weather,
+    Settings,
 }
 
-const TABS: [AppCategory; 2] = [AppCategory::Shops, AppCategory::Weather];
+// const TABS: [AppCategory; 3] = [AppCategory::Shops, AppCategory::Weather, AppCategory::Settings];
 
 const APP_TITLE: &str = "DnD Simp";
 
@@ -56,8 +62,8 @@ pub enum AppMessage {
     NextCategory,
 }
 
-impl App {
-    pub fn new(campaign: &'static mut WorkCampaign) -> anyhow::Result<Self> {
+impl<'a> App<'a> {
+    pub fn new(campaign: &'static mut FileCampaign, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
         Ok(Self {
             name: campaign.name.clone(),
             registry_state: TableState::default().with_selected(Some(0)),
@@ -66,9 +72,16 @@ impl App {
             pages: vec![
                 Box::new(HomePage::new()),
                 Box::new(ShopsPage::new(campaign.shops.clone())),
+                Box::new(CharactersPage::new(
+                    campaign.characters.iter().map(
+                        |ch| ch
+                    ).collect()
+                )),
+                Box::new(SettingsPage::new(),)
             ],
             selected_tab: 0,
             messages: vec![],
+            i18n
         })
     }
 
@@ -94,7 +107,7 @@ impl App {
         while let Some(msg) = self.messages.pop() {
             match &msg {
                 AppMessage::NextCategory => {
-                    if self.selected_tab < TABS.len() - 1 {
+                    if self.selected_tab < self.pages.len() - 1 {
                         self.selected_tab += 1;
                     }
                 }
@@ -106,8 +119,8 @@ impl App {
                 AppMessage::SwitchCategory(cat) => match cat {
                     AppCategory::Shops => self.selected_tab = 0,
                     AppCategory::Weather => self.selected_tab = 1,
+                    AppCategory::Settings => self.selected_tab = 2,
                 },
-                _ => { /* do nothing, otherwise */ }
             }
         }
     }
@@ -176,7 +189,7 @@ impl App {
         frame.render_widget(page_tabs, tab_area);
         frame.render_widget(block, border_area);
 
-        self.pages[self.selected_tab].draw(frame, content_area);
+        self.pages[self.selected_tab].draw(frame, content_area, self.i18n);
 
         // let l = ratatui::widgets::Table::new(
         //     self.campaign
@@ -352,7 +365,7 @@ impl AppScreen for ShopSelectMenuPopup {
 
             let par = Paragraph::new(offer_name.as_str()).centered().bold();
 
-            let rare_string = offer[i].rarity.as_string();
+            let rare_string = offer[i].rarity.to_string();
 
             let par2 = Paragraph::new(rare_string.as_str()).centered().italic();
             frame.render_widget(par, title_area);
@@ -381,9 +394,9 @@ fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-pub fn run_app(campaign: &'static mut WorkCampaign) -> anyhow::Result<()> {
+pub fn run_app(campaign: &'static mut FileCampaign, i18n: &dyn I18ner) -> anyhow::Result<()> {
     let mut terminal = ratatui::init();
-    let mut app = App::new(campaign)?;
+    let mut app = App::new(campaign, i18n)?;
     let app_result = app.run(&mut terminal);
     ratatui::restore();
     app_result

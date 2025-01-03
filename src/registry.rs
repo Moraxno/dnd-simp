@@ -1,10 +1,12 @@
+use std::fmt::Display;
+
 use ratatui::{
     style::{Style, Stylize},
     text::Span,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::ui::display::{AsRatatuiSpan, HasCostExpression};
+use crate::{data::item::ItemIdentifier, ui::display::AsRatatuiSpan};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Rarity {
@@ -17,25 +19,48 @@ pub enum Rarity {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ItemCategory {
+    WondrousItem,
+    SimpleWeapon,
+    Wand,
+}
+
+impl Display for ItemCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ItemCategory::WondrousItem => "Wondrous Item",
+            ItemCategory::SimpleWeapon => "Simple Weapon",
+            ItemCategory::Wand => "Wand",
+        };
+        f.write_str(s)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ItemType {
+    pub identifier: ItemIdentifier,
     pub name: String,
     pub details: String,
     pub rarity: Rarity,
+    pub category: ItemCategory,
 }
 
-impl Rarity {
-    pub fn as_string(&self) -> String {
-        match self {
+impl Display for Rarity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
             Rarity::Common => "Common".into(),
-            Rarity::Common => "Uncommon".into(),
+            Rarity::Uncommon => "Uncommon".into(),
             Rarity::Rare => "Rare".into(),
             Rarity::VeryRare => "Very Rare".into(),
             Rarity::Legendary => "Legendary".into(),
             Rarity::Artifact => "Artifact".into(),
-            _ => "I am to lazy".into(),
-        }
-    }
+        };
 
+        f.write_str(s)
+    }
+}
+
+impl Rarity {
     pub fn as_symbol(&self) -> String {
         match self {
             Rarity::Common => "C".into(),
@@ -51,7 +76,7 @@ impl Rarity {
 
 impl AsRatatuiSpan for Rarity {
     fn as_span(&self) -> Span {
-        let base_span = Span::raw(self.as_string());
+        let base_span = Span::raw(self.to_string());
         match self {
             Rarity::Common => base_span.style(Style::default().gray().italic()),
             Rarity::Uncommon => base_span.style(Style::default().white().italic()),
@@ -63,24 +88,26 @@ impl AsRatatuiSpan for Rarity {
     }
 }
 
-impl HasCostExpression for ItemType {
-    fn price_expr(&self) -> String {
-        match self.rarity {
-            Rarity::Common => "(1d6 + 1) * 10".into(),
-            Rarity::Uncommon => "1d6 * 100".into(),
-            Rarity::Rare => "2d10 * 1000".into(),
-            Rarity::VeryRare => "(1d4 + 1) * 10000".into(),
-            Rarity::Legendary => "2d6 * 25000".into(),
-            Rarity::Artifact => "2d6 * 25000".into(),
-        }
+pub type CostExpressionFunction = dyn Fn(&ItemType) -> String;
+
+pub fn xanathar_magic_item_cost(item: &ItemType) -> String {
+    match item.rarity {
+        Rarity::Common => "(1d6 + 1) * 10".into(),
+        Rarity::Uncommon => "1d6 * 100".into(),
+        Rarity::Rare => "2d10 * 1000".into(),
+        Rarity::VeryRare => "(1d4 + 1) * 10000".into(),
+        Rarity::Legendary => "2d6 * 25000".into(),
+        Rarity::Artifact => "2d6 * 25000".into(),
     }
 }
 
 impl ItemType {
-    pub fn new(name: String, rarity: Rarity, details: String) -> Self {
+    pub fn new(name: String, rarity: Rarity, category: ItemCategory, details: String) -> Self {
         Self {
+            identifier: name.clone(),
             name,
             rarity,
+            category,
             details,
         }
     }

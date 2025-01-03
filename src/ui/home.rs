@@ -12,7 +12,7 @@ use ratatui::{
     Frame,
 };
 
-use super::page::RenderablePage;
+use super::{page::RenderablePage, translator::I18ner};
 
 pub struct HomePage {
     color: Color,
@@ -34,7 +34,7 @@ impl<'a> RenderablePage for HomePage {
         "Home".into()
     }
 
-    fn draw(&mut self, frame: &mut Frame, area: Rect) {
+    fn draw(&mut self, frame: &mut Frame, area: Rect, i18n: &dyn I18ner) {
         let shortest_side = min(area.width, 2 * area.height);
         let [inner_area] = Layout::default()
             .direction(Direction::Horizontal)

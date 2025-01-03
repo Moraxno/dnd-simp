@@ -1,4 +1,7 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    fmt::Display,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct GoldAmount {
@@ -10,15 +13,24 @@ pub type Silver = isize;
 pub type Copper = isize;
 
 impl GoldAmount {
-    pub fn new(gold: isize, silver: isize, copper: isize) -> Self {
-        let gold_copper = gold.saturating_mul(100);
-        let silver_copper = gold.saturating_mul(10);
+    pub fn from_copper(copper: isize) -> Self {
+        Self { copper }
+    }
 
-        let all_copper = gold_copper
-            .saturating_add(silver_copper)
-            .saturating_add(copper);
+    pub fn from_silver(silver: isize) -> Self {
+        Self {
+            copper: silver * 10,
+        }
+    }
 
-        Self { copper: all_copper }
+    pub fn from_electrum(electrum: isize) -> Self {
+        Self {
+            copper: electrum * 50,
+        }
+    }
+
+    pub fn from_gold(gold: isize) -> Self {
+        Self { copper: gold * 100 }
     }
 
     pub fn gold(&self) -> Gold {
@@ -37,22 +49,6 @@ impl GoldAmount {
         (self.gold(), self.silver(), self.copper())
     }
 
-    pub fn as_gold(&self) -> f32 {
-        self.copper as f32 / 100.0f32
-    }
-
-    pub fn as_silver(&self) -> f32 {
-        self.copper as f32 / 10.0f32
-    }
-
-    pub fn as_copper(&self) -> f32 {
-        self.copper as f32
-    }
-
-    pub fn as_electrum(&self) -> f32 {
-        self.copper as f32 / 50.0f32
-    }
-
     pub fn gold_str(&self) -> String {
         format!("{} gp", self.gold())
     }
@@ -66,13 +62,30 @@ impl GoldAmount {
     }
 }
 
-impl ToString for GoldAmount {
-    fn to_string(&self) -> String {
+pub trait AsGoldCurrency {
+    fn gold(&self) -> GoldAmount;
+    fn silver(&self) -> GoldAmount;
+    fn copper(&self) -> GoldAmount;
+}
+
+impl AsGoldCurrency for isize {
+    fn gold(&self) -> GoldAmount {
+        GoldAmount::from_gold(*self)
+    }
+
+    fn silver(&self) -> GoldAmount {
+        GoldAmount::from_silver(*self)
+    }
+
+    fn copper(&self) -> GoldAmount {
+        GoldAmount::from_copper(*self)
+    }
+}
+
+impl Display for GoldAmount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let amount_pattern = self.as_tuple();
-
-        log::info!("Gold Pattern {:?}", amount_pattern);
-
-        match amount_pattern {
+        let s = match amount_pattern {
             (0, 0, 0) => self.gold_str(),
             (0, 0, _) => self.copper_str(),
             (0, _, 0) => self.silver_str(),
@@ -85,7 +98,9 @@ impl ToString for GoldAmount {
                 self.silver_str(),
                 self.copper_str()
             ),
-        }
+        };
+
+        f.write_str(&s)
     }
 }
 

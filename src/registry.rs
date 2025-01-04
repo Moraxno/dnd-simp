@@ -31,7 +31,7 @@ pub struct ItemRegistry {
 impl ItemRegistry {
     pub fn link_character<'a>(&'a self, character: FileCharacter) -> Character<'a> {
         Character {
-            state: FileCharacter,
+            state: character,
             registry: &self
         }
     }

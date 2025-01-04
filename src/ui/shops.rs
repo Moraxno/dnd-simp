@@ -18,7 +18,7 @@ pub struct ShopsPage<'a> {
 }
 
 impl<'a> ShopsPage<'a> {
-    pub fn new(shops: Vec<Rc<RefCell<Shop>>>) -> Self {
+    pub fn new(shops: Vec<Rc<RefCell<Shop<'a>>>>) -> Self {
         Self {
             shop_table_state: TableState::default().with_selected(if !shops.is_empty() {
                 Some(0)

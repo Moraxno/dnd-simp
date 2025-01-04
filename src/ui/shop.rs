@@ -10,7 +10,7 @@ use ratatui::{
     }, Frame,
 };
 
-use crate::data::{item::ItemType, shop::Shop};
+use crate::data::{item::ItemType, shop::{Shop, StockedItem}};
 
 use super::{offer::OfferPage, page::RenderablePage, translator::I18ner};
 
@@ -54,7 +54,7 @@ enum Transaction {
 
 #[derive(Debug)]
 pub struct ShopPage<'a> {
-    shop: Rc<RefCell<Shop<'a>>>,
+    shop: Shop<'a>,
     inventory_table_state: TableState,
     focus: FocusedArea,
 
@@ -69,10 +69,10 @@ pub struct ShopPage<'a> {
 }
 
 impl<'a> ShopPage<'a> {
-    pub fn new(shop: Rc<RefCell<Shop>>) -> Self {
+    pub fn new(shop: &'a Shop<'a>) -> Self {
         Self {
             inventory_table_state: TableState::default().with_selected(
-                if !shop.borrow().get_inventory().is_empty() {
+                if !shop.get_inventory().is_empty() {
                     Some(0)
                 } else {
                     None
@@ -88,9 +88,11 @@ impl<'a> ShopPage<'a> {
         }
     }
 
-    pub fn selected_item(&self) -> Option<ItemType> {
+    pub fn selected_item(&self) -> Option<StockedItem> {
         let idx = self.inventory_table_state.selected()?;
-        Some(self.shop.borrow().get_inventory()[idx].clone())
+        let shop = self.shop.borrow();
+        let item = shop.get_inventory()[idx].to_owned();
+        Some(item)
     }
 
     fn perform_transactions(&mut self) {
@@ -170,15 +172,14 @@ impl<'a> ShopPage<'a> {
 
         let table = Table::new(
             self.shop
-                .borrow()
                 .get_inventory()
                 .iter()
-                .map(|item| Row::new(vec![item.rarity.to_string(), item.name.clone()])),
+                .map(|item| Row::new(vec![item.item_type.rarity.to_string(), item.item_type.name.clone()])),
             [1, 50],
         )
         .block(
             Block::bordered()
-                .title(self.shop.borrow().name.clone())
+                .title(self.shop.name.clone())
                 .border_type(self.border_type_for_area(FocusedArea::Inventory)),
         )
         //.row_highlight_style(Style::new().white().on_green())
@@ -187,7 +188,7 @@ impl<'a> ShopPage<'a> {
         frame.render_stateful_widget(table, inventory_area, &mut self.inventory_table_state);
 
         let s: String = if let Some(item) = self.selected_item() {
-            item.details
+            item.item_type.details.clone()
         } else {
             "(no item selected)".into()
         };

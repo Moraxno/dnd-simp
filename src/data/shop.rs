@@ -13,8 +13,8 @@ pub enum Stock {
 
 #[derive(Debug, Clone)]
 pub struct StockedItem<'a> {
-    item: &'a ItemType,
-    stock: Stock
+    pub item_type: &'a ItemType,
+    pub stock: Stock
 }
 
 #[derive(Debug, Clone)]

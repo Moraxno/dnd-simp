@@ -1,3 +1,7 @@
+use ratatui::{style::{Style, Stylize as _}, text::Span};
+
+use crate::data::item::Rarity;
+
 pub trait AsRatatuiSpan {
     fn as_span(&self) -> ratatui::text::Span;
 }

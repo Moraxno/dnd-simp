@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Index};
+use std::{fmt::Display, fs::File, ops::Index};
 
 use ratatui::{
     style::{Style, Stylize},
@@ -6,7 +6,7 @@ use ratatui::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{data::item::{ItemCategory, ItemIdentifier, ItemType, Rarity}, ui::display::AsRatatuiSpan};
+use crate::{data::{character::{Character, FileCharacter}, item::{Item, ItemCategory, ItemIdentifier, ItemType, Rarity}}, ui::display::AsRatatuiSpan};
 
 pub type CostExpressionFunction = dyn Fn(&ItemType) -> String;
 
@@ -31,8 +31,8 @@ pub struct ItemRegistry {
 impl ItemRegistry {
     pub fn link_character<'a>(&'a self, character: FileCharacter) -> Character<'a> {
         Character {
-            name: character.name,
-            wish_list: link_wishlist(&self.items, character.wish_list)
+            state: FileCharacter,
+            registry: &self
         }
     }
 }
@@ -53,19 +53,19 @@ fn link_wishlist(items: &Vec<ItemType>, wish_list: Vec<String>) -> Vec<Item<'_>>
 
 impl ItemRegistry {
     pub fn new() -> Self {
-        Self { item_types: vec![] }
+        Self { items: vec![] }
     }
 
     pub fn add(&mut self, item_type: ItemType) {
-        self.item_types.push(item_type);
+        self.items.push(item_type);
     }
 
     pub fn items(&self) -> &[ItemType] {
-        self.item_types.as_slice()
+        self.items.as_slice()
     }
 
-    pub fn get(&self, key: ItemIdentifier) -> Option<&ItemType> {
-        for i in self.item_types.iter() {
+    pub fn get(&self, key: &ItemIdentifier) -> Option<&ItemType> {
+        for i in self.items.iter() {
             if i.identifier == key {
                 return Some(i);
             }
@@ -75,7 +75,7 @@ impl ItemRegistry {
     }
 
     pub fn get_mut(&mut self, key: ItemIdentifier) -> Option<&mut ItemType> {
-        for i in self.item_types.iter_mut() {
+        for i in self.items.iter_mut() {
             if i.identifier == key {
                 return Some(i);
             }

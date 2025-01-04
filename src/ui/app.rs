@@ -13,7 +13,7 @@ use ratatui::{
 };
 use style::palette::material::{self, AccentedPalette, BLACK, BLUE, GRAY as SLATE, GREEN, RED, WHITE, YELLOW};
 
-use crate::campaign::{Campaign, FileMeta};
+use crate::campaign::{Campaign};
 use crate::data::shop::Shop;
 
 use super::characters::CharactersPage;
@@ -107,7 +107,8 @@ impl<'a> App<'a> {
             ],
             pages: vec![
                 Box::new(HomePage::new()),
-                Box::new(ShopsPage::new(campaign.shops.clone())),
+                // @todo fix this
+                // Box::new(ShopsPage::new(campaign.shops.clone())),
                 Box::new(CharactersPage::new(
                     campaign.characters.iter().map(
                         |ch| ch

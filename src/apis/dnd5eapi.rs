@@ -9,7 +9,7 @@ use anyhow::anyhow;
 use mockall::predicate::*;
 use mockall::*;
 
-use crate::registry::{ItemCategory, ItemType};
+use crate::data::item::{ItemCategory, ItemType, Rarity};
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct Dnd5eApiItemVariant {
@@ -123,11 +123,11 @@ impl Dnd5eApiMagicItemList {
 
 pub fn dnd5eapi_to_itemtype(item: &Dnd5eApiItem) -> anyhow::Result<ItemType> {
     let rarity = match item.rarity.name.as_str() {
-        "Common" => crate::registry::Rarity::Common,
-        "Rare" => crate::registry::Rarity::Rare,
-        "Very Rare" => crate::registry::Rarity::VeryRare,
-        "Legendary" => crate::registry::Rarity::Legendary,
-        "Artifact" => crate::registry::Rarity::Artifact,
+        "Common" => Rarity::Common,
+        "Rare" => Rarity::Rare,
+        "Very Rare" => Rarity::VeryRare,
+        "Legendary" => Rarity::Legendary,
+        "Artifact" => Rarity::Artifact,
         _ => anyhow::bail!("Invalid rarity string encountered."),
     };
 

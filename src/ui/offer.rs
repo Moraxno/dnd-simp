@@ -26,7 +26,7 @@ struct Offer<'a> {
 
 #[derive(Debug)]
 pub struct OfferPage<'a> {
-    shop: Rc<RefCell<Shop<'a>>>,
+    shop: &'a Shop<'a>,
 
     current_offer: Vec<Offer<'a>>,
 
@@ -34,9 +34,8 @@ pub struct OfferPage<'a> {
 }
 
 impl<'a> OfferPage<'a> {
-    pub fn new(shop: Rc<RefCell<Shop>>) -> Self {
+    pub fn new(shop: &'a Shop<'a>) -> Self {
         let current_offer = shop
-            .borrow()
             .produce_offer(3)
             .into_iter()
             .cloned()
@@ -66,7 +65,7 @@ impl<'a> OfferPage<'a> {
             .current_offer
             .iter()
             .map(|offer| {
-                let opt_d_expr: Result<Expr, _> = cost_expr(&offer.stocked_item).as_str().parse();
+                let opt_d_expr: Result<Expr, _> = cost_expr(&offer.stocked_item.item_type).as_str().parse();
 
                 let roll = if let Ok(d_expr) = opt_d_expr {
                     d_expr
@@ -98,7 +97,7 @@ impl<'a> OfferPage<'a> {
 
 impl<'a> RenderablePage for OfferPage<'a> {
     fn title(&self) -> String {
-        format!("Offer for {}", self.shop.borrow().name)
+        format!("Offer for {}", self.shop.name)
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect, i18n: &dyn I18ner) {
@@ -129,14 +128,14 @@ impl<'a> RenderablePage for OfferPage<'a> {
             };
 
             let par = Paragraph::new(vec![
-                Line::raw(offer.stocked_item.name.clone()),
+                Line::raw(offer.stocked_item.item_type.name.clone()),
                 Line::from(vec![
-                    Span::raw(offer.stocked_item.category.to_string()).italic(),
+                    Span::raw(offer.stocked_item.item_type.category.to_string()).italic(),
                     Span::raw(", "),
-                    offer.stocked_item.rarity.as_span(),
+                    offer.stocked_item.item_type.rarity.as_span(),
                 ]),
                 Line::raw(" "),
-                Line::raw(offer.stocked_item.details.clone()),
+                Line::raw(offer.stocked_item.item_type.details.clone()),
             ])
             .block(block)
             .wrap(Wrap { trim: true });
@@ -153,7 +152,7 @@ impl<'a> RenderablePage for OfferPage<'a> {
                 Line::from(vec![
                     Span::raw(i18n.i18n(I18nPhrase::Roll)),
                     Span::raw(" "),
-                    Span::raw(xanathar_magic_item_cost(&offer.stocked_item)),
+                    Span::raw(xanathar_magic_item_cost(&offer.stocked_item.item_type)),
                     Span::raw(" gp"),
                 ])
                 .centered()

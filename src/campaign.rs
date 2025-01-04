@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::data::{campaign::CampaignFolder, character::{Character, FileCharacter}, item::{Item, ItemType}, shop::Shop};
+use crate::{data::{campaign::{CampaignFolder, FileMeta}, character::{Character, FileCharacter}, item::{Item, ItemType}, shop::Shop}, registry::ItemRegistry};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum FileStorageVersion {
@@ -17,23 +17,14 @@ pub struct Campaign<'a> {
     pub shops: Vec<Rc<RefCell<Shop<'a>>>>,
 }
 
-impl<'a> From<&'a CampaignFolder> for (Campaign<'a>, &'a ItemRegistry) {
-    fn from(value: &'a CampaignFolder) -> (Campaign<'a>, &'a ItemRegistry) {
-        let campaign = Campaign::from_files(value.meta.clone(), value.characters.clone(), &value.item_registry);
+impl CampaignFolder {
+    fn destructure<'a>(&'a mut self) -> (Campaign<'a>, &'a mut ItemRegistry) {
+        let campaign = Campaign::from_files(self.meta.clone(), self.characters.clone(), &self.item_registry);
 
-        (campaign, &value.item_registry)
+        (campaign, &mut self.item_registry)
     }
 }
-
-// @todo i hate this, we have to change this
-impl<'a> From<&'a mut CampaignFolder> for (Campaign<'a>, &'a ItemRegistry) {
-    fn from(value: &'a mut CampaignFolder) -> (Campaign<'a>, &'a ItemRegistry) {
-        let campaign = Campaign::from_files(value.meta.clone(), value.characters.clone(), &value.item_registry);
-
-        (campaign, &value.item_registry)
-    }
-}
-
+rust 
 impl<'a> Campaign<'a> {
     pub fn from_files(meta: FileMeta, characters: Vec<FileCharacter>, registry: &'a ItemRegistry) -> Self {
         Self {

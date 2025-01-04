@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use campaign::{Campaign, FileMeta, ItemRegistry};
+use campaign::{Campaign};
 use chrono::format::Item;
 use clap::Parser;
 
@@ -14,14 +14,16 @@ mod ui;
 
 mod state;
 
+use data::campaign::FileMeta;
 use data::character::{Character, FileCharacter};
 use data::item;
-use data::shop::Shop;
+use data::shop::{FileShop, Shop};
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use registry::ItemType;
+use data::item::ItemType;
+use registry::ItemRegistry;
 use serde::Deserialize;
 use ui::translator::EngNerdI18n;
 
@@ -70,13 +72,13 @@ pub struct CampaignFolder {
     pub meta: FileMeta,
     pub item_registry: ItemRegistry,
     pub characters: Vec<FileCharacter>,
-    pub shops: Vec<Shop>,
+    pub shops: Vec<FileShop>,
 }
 
 impl CampaignFolder {
     pub fn empty(name: String) -> Self {
         Self {
-            meta: FileMeta { name: name, shops: vec![] },
+            meta: FileMeta { name: name },
             item_registry: ItemRegistry { items: vec![] },
             characters: vec![],
             shops: vec![],
@@ -159,7 +161,7 @@ fn main() {
     let boxed = Box::new(campaign_folder);
     let persistent_folder: &'static mut CampaignFolder = Box::leak(boxed);
 
-    let (mut campaign, mut item_registry) = (persistent_folder).into();
+    let (mut campaign, mut item_registry) = persistent_folder.destructure();
 
     let boxed = Box::new(campaign);
     let persistent_campaign: &'static mut Campaign = Box::leak(boxed);

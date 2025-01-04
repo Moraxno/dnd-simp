@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use crate::registry::ItemRegistry;
+
 use super::{character::FileCharacter, item::ItemType, shop::FileShop};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

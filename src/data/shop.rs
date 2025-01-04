@@ -1,23 +1,43 @@
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
+use std::num::NonZero;
 
-use crate::registry::ItemType;
+use super::item::{ItemIdentifier, ItemType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Shop {
+pub enum Stock {
+    Stocked(NonZero<u32>),
+    Sold,
+    Infinite
+}
+
+#[derive(Debug, Clone)]
+pub struct StockedItem<'a> {
+    item: &'a ItemType,
+    stock: Stock
+}
+
+#[derive(Debug, Clone)]
+pub struct Shop<'a> {
     pub name: String,
     short_name: Option<String>,
-    inventory: Vec<ItemType>,
+    inventory: Vec<StockedItem<'a>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileStockedItem {
+    pub identifier: ItemIdentifier,
+    pub stock: Stock
+}
 
-//@todo implement this properly
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileShop {
-
+    pub name: String,
+    pub short_name: Option<String>,
+    pub inventory: Vec<FileStockedItem>,
 }
 
-impl Shop {
+impl<'a> Shop<'a> {
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -42,11 +62,11 @@ impl Shop {
         }
     }
 
-    pub fn get_inventory(&self) -> &[ItemType] {
+    pub fn get_inventory(&self) -> &[StockedItem] {
         self.inventory.as_slice()
     }
 
-    pub fn produce_offer(&self, amount: u8) -> Vec<&ItemType> {
+    pub fn produce_offer(&self, amount: u8) -> Vec<&StockedItem> {
         self.inventory
             .choose_multiple(&mut rand::thread_rng(), amount.into())
             .collect()

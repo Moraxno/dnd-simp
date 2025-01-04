@@ -10,7 +10,7 @@ use ratatui::{
     }, Frame,
 };
 
-use crate::{data::shop::Shop, registry::ItemType};
+use crate::data::{item::ItemType, shop::Shop};
 
 use super::{offer::OfferPage, page::RenderablePage, translator::I18ner};
 
@@ -53,8 +53,8 @@ enum Transaction {
 }
 
 #[derive(Debug)]
-pub struct ShopPage {
-    shop: Rc<RefCell<Shop>>,
+pub struct ShopPage<'a> {
+    shop: Rc<RefCell<Shop<'a>>>,
     inventory_table_state: TableState,
     focus: FocusedArea,
 
@@ -63,12 +63,12 @@ pub struct ShopPage {
     detail_scroll: u16,
     detail_height: u16,
 
-    overlay_page: Option<OfferPage>,
+    overlay_page: Option<OfferPage<'a>>,
 
     transactions: VecDeque<Transaction>,
 }
 
-impl ShopPage {
+impl<'a> ShopPage<'a> {
     pub fn new(shop: Rc<RefCell<Shop>>) -> Self {
         Self {
             inventory_table_state: TableState::default().with_selected(
@@ -233,7 +233,7 @@ impl ShopPage {
     }
 }
 
-impl RenderablePage for ShopPage {
+impl<'a> RenderablePage for ShopPage<'a> {
     fn title(&self) -> String {
         self.shop.borrow().name.clone()
     }

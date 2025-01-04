@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Index};
 
 use ratatui::{
     style::{Style, Stylize},
@@ -6,87 +6,7 @@ use ratatui::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{data::item::ItemIdentifier, ui::display::AsRatatuiSpan};
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum Rarity {
-    Common,
-    Uncommon,
-    Rare,
-    VeryRare,
-    Legendary,
-    Artifact,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum ItemCategory {
-    WondrousItem,
-    SimpleWeapon,
-    Wand,
-}
-
-impl Display for ItemCategory {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            ItemCategory::WondrousItem => "Wondrous Item",
-            ItemCategory::SimpleWeapon => "Simple Weapon",
-            ItemCategory::Wand => "Wand",
-        };
-        f.write_str(s)
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ItemType {
-    pub identifier: ItemIdentifier,
-    pub name: String,
-    pub details: String,
-    pub rarity: Rarity,
-    pub category: ItemCategory,
-}
-
-impl Display for Rarity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            Rarity::Common => "Common".into(),
-            Rarity::Uncommon => "Uncommon".into(),
-            Rarity::Rare => "Rare".into(),
-            Rarity::VeryRare => "Very Rare".into(),
-            Rarity::Legendary => "Legendary".into(),
-            Rarity::Artifact => "Artifact".into(),
-        };
-
-        f.write_str(s)
-    }
-}
-
-impl Rarity {
-    pub fn as_symbol(&self) -> String {
-        match self {
-            Rarity::Common => "C".into(),
-            Rarity::Uncommon => "U".into(),
-            Rarity::Artifact => "A".into(),
-            Rarity::Rare => "R".into(),
-            Rarity::VeryRare => "V".into(),
-            Rarity::Legendary => "L".into(),
-            _ => "I am to lazy".into(),
-        }
-    }
-}
-
-impl AsRatatuiSpan for Rarity {
-    fn as_span(&self) -> Span {
-        let base_span = Span::raw(self.to_string());
-        match self {
-            Rarity::Common => base_span.style(Style::default().gray().italic()),
-            Rarity::Uncommon => base_span.style(Style::default().white().italic()),
-            Rarity::Rare => base_span.style(Style::default().green().italic()),
-            Rarity::VeryRare => base_span.style(Style::default().magenta().italic()),
-            Rarity::Legendary => base_span.style(Style::default().red().italic()),
-            Rarity::Artifact => base_span.style(Style::default().red().underlined().italic()),
-        }
-    }
-}
+use crate::{data::item::{ItemCategory, ItemIdentifier, ItemType, Rarity}, ui::display::AsRatatuiSpan};
 
 pub type CostExpressionFunction = dyn Fn(&ItemType) -> String;
 
@@ -101,22 +21,34 @@ pub fn xanathar_magic_item_cost(item: &ItemType) -> String {
     }
 }
 
-impl ItemType {
-    pub fn new(name: String, rarity: Rarity, category: ItemCategory, details: String) -> Self {
-        Self {
-            identifier: name.clone(),
-            name,
-            rarity,
-            category,
-            details,
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ItemRegistry {
+    pub items: Vec<ItemType>
+}
+
+impl ItemRegistry {
+    pub fn link_character<'a>(&'a self, character: FileCharacter) -> Character<'a> {
+        Character {
+            name: character.name,
+            wish_list: link_wishlist(&self.items, character.wish_list)
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-
-pub struct ItemRegistry {
-    item_types: Vec<ItemType>,
+fn link_wishlist(items: &Vec<ItemType>, wish_list: Vec<String>) -> Vec<Item<'_>> {
+    wish_list
+        .into_iter()
+        .map(|item_identifier| 
+            items
+                .iter()
+                .find(|item| 
+                    item.identifier == item_identifier)
+                .map_or_else(
+                    || Item::Unresolved(item_identifier), 
+                    |item| Item::Concrete(item)))
+        .collect()
 }
 
 impl ItemRegistry {
@@ -132,6 +64,26 @@ impl ItemRegistry {
         self.item_types.as_slice()
     }
 
+    pub fn get(&self, key: ItemIdentifier) -> Option<&ItemType> {
+        for i in self.item_types.iter() {
+            if i.identifier == key {
+                return Some(i);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_mut(&mut self, key: ItemIdentifier) -> Option<&mut ItemType> {
+        for i in self.item_types.iter_mut() {
+            if i.identifier == key {
+                return Some(i);
+            }
+        }
+
+        None
+    }
+
     pub fn to_yaml(&mut self) -> anyhow::Result<String> {
         Ok(serde_yaml::to_string(&self)?)
     }
@@ -143,9 +95,4 @@ impl ItemRegistry {
     pub fn from_reader<R: std::io::Read>(yaml_reader: R) -> anyhow::Result<Self> {
         Ok(serde_yaml::from_reader(yaml_reader)?)
     }
-}
-
-pub enum ItemQuantity {
-    Stocked(u64),
-    Infinite,
 }

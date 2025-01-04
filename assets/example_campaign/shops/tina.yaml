@@ -1,0 +1,9 @@
+name: Tinas und Sinas und Tinos und Sinos Schneiderei (magisch)
+short_name: Tinas und Sinas
+inventory:
+- identifier: item_id
+  stock: Sold
+- identifier: item_id
+  stock: !Stocked 42
+- identifier: item_id
+  stock: Infinite

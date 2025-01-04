@@ -2,23 +2,19 @@ use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{data::{character::{Character, FileCharacter}, item::Item, shop::Shop}, registry::ItemType, CampaignFolder};
+use crate::data::{campaign::CampaignFolder, character::{Character, FileCharacter}, item::{Item, ItemType}, shop::Shop};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum FileStorageVersion {
     V1,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FileMeta {
-    pub name: String,
-    pub shops: Vec<Shop>,
-}
+
 
 pub struct Campaign<'a> {
     pub name: String,
     pub characters: Vec<Character<'a>>,
-    pub shops: Vec<Rc<RefCell<Shop>>>,
+    pub shops: Vec<Rc<RefCell<Shop<'a>>>>,
 }
 
 impl<'a> From<&'a CampaignFolder> for (Campaign<'a>, &'a ItemRegistry) {
@@ -36,33 +32,6 @@ impl<'a> From<&'a mut CampaignFolder> for (Campaign<'a>, &'a ItemRegistry) {
 
         (campaign, &value.item_registry)
     }
-}
-
-pub struct ItemRegistry {
-    pub items: Vec<ItemType>
-}
-
-impl ItemRegistry {
-    pub fn link_character<'a>(&'a self, character: FileCharacter) -> Character<'a> {
-        Character {
-            name: character.name,
-            wish_list: link_wishlist(&self.items, character.wish_list)
-        }
-    }
-}
-
-fn link_wishlist(items: &Vec<ItemType>, wish_list: Vec<String>) -> Vec<Item<'_>> {
-    wish_list
-        .into_iter()
-        .map(|item_identifier| 
-            items
-                .iter()
-                .find(|item| 
-                    item.identifier == item_identifier)
-                .map_or_else(
-                    || Item::Unresolved(item_identifier), 
-                    |item| Item::Concrete(item)))
-        .collect()
 }
 
 impl<'a> Campaign<'a> {

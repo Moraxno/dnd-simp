@@ -15,7 +15,8 @@ mod ui;
 mod state;
 
 use data::character::{Character, FileCharacter};
-use data::shop::FileShop;
+use data::item;
+use data::shop::Shop;
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
@@ -69,7 +70,7 @@ pub struct CampaignFolder {
     pub meta: FileMeta,
     pub item_registry: ItemRegistry,
     pub characters: Vec<FileCharacter>,
-    pub shops: Vec<FileShop>,
+    pub shops: Vec<Shop>,
 }
 
 impl CampaignFolder {
@@ -158,7 +159,7 @@ fn main() {
     let boxed = Box::new(campaign_folder);
     let persistent_folder: &'static mut CampaignFolder = Box::leak(boxed);
 
-    let (mut campaign, item_registry) = (persistent_folder).into();
+    let (mut campaign, mut item_registry) = (persistent_folder).into();
 
     let boxed = Box::new(campaign);
     let persistent_campaign: &'static mut Campaign = Box::leak(boxed);
@@ -166,4 +167,6 @@ fn main() {
     let inter = EngNerdI18n {};
 
     let s = ui::app::run_app(persistent_campaign, &inter);
+
+
 }

@@ -5,8 +5,7 @@ use ratatui::{
 };
 
 use crate::{
-    data::{gold::GoldAmount, shop::Shop},
-    registry::ItemType,
+    data::{gold::GoldAmount, shop::{Shop, StockedItem}},
 };
 use crate::{
     registry::{xanathar_magic_item_cost, CostExpressionFunction},
@@ -20,21 +19,21 @@ use tyche::Expr;
 use crate::data::gold::AsGoldCurrency;
 
 #[derive(Debug)]
-struct Offer {
-    pub item: ItemType,
+struct Offer<'a> {
+    pub stocked_item: StockedItem<'a>,
     pub price: Option<GoldAmount>,
 }
 
 #[derive(Debug)]
-pub struct OfferPage {
-    shop: Rc<RefCell<Shop>>,
+pub struct OfferPage<'a> {
+    shop: Rc<RefCell<Shop<'a>>>,
 
-    current_offer: Vec<Offer>,
+    current_offer: Vec<Offer<'a>>,
 
     offer_idx: usize,
 }
 
-impl OfferPage {
+impl<'a> OfferPage<'a> {
     pub fn new(shop: Rc<RefCell<Shop>>) -> Self {
         let current_offer = shop
             .borrow()
@@ -42,7 +41,7 @@ impl OfferPage {
             .into_iter()
             .cloned()
             .map(|i| Offer {
-                item: i,
+                stocked_item: i,
                 price: None,
             })
             .collect();
@@ -58,7 +57,7 @@ impl OfferPage {
             .current_offer
             .iter()
             .map(|offer| 
-                Offer { item: offer.item.clone(), price: None })
+                Offer { stocked_item: offer.stocked_item.clone(), price: None })
             .collect();
     }
 
@@ -67,7 +66,7 @@ impl OfferPage {
             .current_offer
             .iter()
             .map(|offer| {
-                let opt_d_expr: Result<Expr, _> = cost_expr(&offer.item).as_str().parse();
+                let opt_d_expr: Result<Expr, _> = cost_expr(&offer.stocked_item).as_str().parse();
 
                 let roll = if let Ok(d_expr) = opt_d_expr {
                     d_expr
@@ -89,7 +88,7 @@ impl OfferPage {
                 };
 
                 Offer {
-                    item: offer.item.clone(),
+                    stocked_item: offer.stocked_item.clone(),
                     price,
                 }
             })
@@ -97,7 +96,7 @@ impl OfferPage {
     }
 }
 
-impl RenderablePage for OfferPage {
+impl<'a> RenderablePage for OfferPage<'a> {
     fn title(&self) -> String {
         format!("Offer for {}", self.shop.borrow().name)
     }
@@ -130,14 +129,14 @@ impl RenderablePage for OfferPage {
             };
 
             let par = Paragraph::new(vec![
-                Line::raw(offer.item.name.clone()),
+                Line::raw(offer.stocked_item.name.clone()),
                 Line::from(vec![
-                    Span::raw(offer.item.category.to_string()).italic(),
+                    Span::raw(offer.stocked_item.category.to_string()).italic(),
                     Span::raw(", "),
-                    offer.item.rarity.as_span(),
+                    offer.stocked_item.rarity.as_span(),
                 ]),
                 Line::raw(" "),
-                Line::raw(offer.item.details.clone()),
+                Line::raw(offer.stocked_item.details.clone()),
             ])
             .block(block)
             .wrap(Wrap { trim: true });
@@ -154,7 +153,7 @@ impl RenderablePage for OfferPage {
                 Line::from(vec![
                     Span::raw(i18n.i18n(I18nPhrase::Roll)),
                     Span::raw(" "),
-                    Span::raw(xanathar_magic_item_cost(&offer.item)),
+                    Span::raw(xanathar_magic_item_cost(&offer.stocked_item)),
                     Span::raw(" gp"),
                 ])
                 .centered()
@@ -185,7 +184,7 @@ impl RenderablePage for OfferPage {
     }
 }
 
-impl HandlesKeyEvents for OfferPage {
+impl<'a> HandlesKeyEvents for OfferPage<'a> {
     fn get_handlers(&self) -> Vec<super::flow::KeyHandler> {
         vec![
             KeyHandler {

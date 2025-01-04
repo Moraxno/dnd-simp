@@ -11,7 +11,7 @@ use ratatui::{
     widgets::{Block, Clear, Paragraph, TableState},
     DefaultTerminal, Frame,
 };
-use style::palette::material::{self, AccentedPalette, BLACK, BLUE, GRAY as SLATE, GREEN, RED, WHITE};
+use style::palette::material::{self, AccentedPalette, BLACK, BLUE, GRAY as SLATE, GREEN, RED, WHITE, YELLOW};
 
 use crate::campaign::{Campaign, FileMeta};
 use crate::data::shop::Shop;
@@ -88,6 +88,10 @@ pub fn char_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
     Box::new(CharactersPage::new(camp.characters.iter().collect()))
 }
 
+// pub fn shop_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
+//     Box::new(ShopsPage::new(camp.shops.iter().collect()))
+// }
+
 
 impl<'a> App<'a> {
     pub fn new(campaign: &'static mut Campaign, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
@@ -99,6 +103,7 @@ impl<'a> App<'a> {
             tabs: vec![
                 Tab::new("Home".into(), &home_wrapper, BLUE),
                 Tab::new("Characters".into(), &char_wrapper, RED),
+                //Tab::new("Shops".into(), &shop_wrapper, YELLOW),
             ],
             pages: vec![
                 Box::new(HomePage::new()),
@@ -306,11 +311,6 @@ impl<'a> App<'a> {
     }
 }
 
-struct ShopSelectMenuPopup {
-    shop_name: String,
-    shop: Shop,
-}
-
 enum FlowControl {
     ClosePopup,
     NoOperation,
@@ -366,62 +366,62 @@ trait AppScreen {
 // //     }
 // // }
 
-impl ShopSelectMenuPopup {
-    pub fn new(shop_name: String, shop: Shop) -> Self {
-        Self { shop_name, shop }
-    }
-}
-impl AppScreen for ShopSelectMenuPopup {
-    fn draw(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered().title(format!("Selecting {}", self.shop_name));
+// // // // impl ShopSelectMenuPopup {
+// // // //     pub fn new(shop_name: String, shop: Shop) -> Self {
+// // // //         Self { shop_name, shop }
+// // // //     }
+// // // // }
+// // // // impl AppScreen for ShopSelectMenuPopup {
+// // // //     fn draw(&self, frame: &mut Frame, area: Rect) {
+// // // //         let block = Block::bordered().title(format!("Selecting {}", self.shop_name));
 
-        let options: [Rect; 3] = Layout::default()
-            .direction(Direction::Horizontal)
-            .margin(1)
-            .constraints(vec![
-                Constraint::Fill(1),
-                Constraint::Fill(1),
-                Constraint::Fill(1),
-            ])
-            .areas(area);
+// // // //         let options: [Rect; 3] = Layout::default()
+// // // //             .direction(Direction::Horizontal)
+// // // //             .margin(1)
+// // // //             .constraints(vec![
+// // // //                 Constraint::Fill(1),
+// // // //                 Constraint::Fill(1),
+// // // //                 Constraint::Fill(1),
+// // // //             ])
+// // // //             .areas(area);
 
-        let offer = self.shop.produce_offer(3);
+// // // //         let offer = self.shop.produce_offer(3);
 
-        frame.render_widget(Clear, area); //this clears out the background
+// // // //         frame.render_widget(Clear, area); //this clears out the background
 
-        for (i, op_area) in options.iter().enumerate() {
-            if offer.len() <= i {
-                break;
-            }
+// // // //         for (i, op_area) in options.iter().enumerate() {
+// // // //             if offer.len() <= i {
+// // // //                 break;
+// // // //             }
 
-            let offer_name = &offer[i].name;
+// // // //             let offer_name = &offer[i].name;
 
-            let [title_area, desc_area] = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(vec![Constraint::Fill(1), Constraint::Fill(2)])
-                .areas(*op_area);
+// // // //             let [title_area, desc_area] = Layout::default()
+// // // //                 .direction(Direction::Vertical)
+// // // //                 .constraints(vec![Constraint::Fill(1), Constraint::Fill(2)])
+// // // //                 .areas(*op_area);
 
-            let par = Paragraph::new(offer_name.as_str()).centered().bold();
+// // // //             let par = Paragraph::new(offer_name.as_str()).centered().bold();
 
-            let rare_string = offer[i].rarity.to_string();
+// // // //             let rare_string = offer[i].rarity.to_string();
 
-            let par2 = Paragraph::new(rare_string.as_str()).centered().italic();
-            frame.render_widget(par, title_area);
-            frame.render_widget(par2, desc_area);
-        }
+// // // //             let par2 = Paragraph::new(rare_string.as_str()).centered().italic();
+// // // //             frame.render_widget(par, title_area);
+// // // //             frame.render_widget(par2, desc_area);
+// // // //         }
 
-        frame.render_widget(block, area);
-    }
+// // // //         frame.render_widget(block, area);
+// // // //     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) -> FlowControl {
-        match key_event.code {
-            KeyCode::Esc => FlowControl::ClosePopup,
-            // KeyCode::Up => self.registry_state.scroll_up_by(1),
-            // KeyCode::Down => self.registry_state.scroll_down_by(1),
-            _ => FlowControl::NoOperation,
-        }
-    }
-}
+// // // //     fn handle_key_event(&mut self, key_event: KeyEvent) -> FlowControl {
+// // // //         match key_event.code {
+// // // //             KeyCode::Esc => FlowControl::ClosePopup,
+// // // //             // KeyCode::Up => self.registry_state.scroll_up_by(1),
+// // // //             // KeyCode::Down => self.registry_state.scroll_down_by(1),
+// // // //             _ => FlowControl::NoOperation,
+// // // //         }
+// // // //     }
+// // // // }
 
 /// helper function to create a centered rect using up certain percentage of the available rect `r`
 fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {

@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::registry::ItemType;
 
 use super::item::{Item, ItemIdentifier};
 

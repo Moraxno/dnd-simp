@@ -10,14 +10,14 @@ use crate::ui::page::RenderablePage;
 
 use super::{shop::ShopPage, translator::I18ner};
 
-pub struct ShopsPage {
-    shops: Vec<Rc<RefCell<Shop>>>,
+pub struct ShopsPage<'a> {
+    shops: Vec<Rc<RefCell<Shop<'a>>>>,
     shop_table_state: TableState,
 
-    open_shop_page: Option<ShopPage>,
+    open_shop_page: Option<ShopPage<'a>>,
 }
 
-impl ShopsPage {
+impl<'a> ShopsPage<'a> {
     pub fn new(shops: Vec<Rc<RefCell<Shop>>>) -> Self {
         Self {
             shop_table_state: TableState::default().with_selected(if !shops.is_empty() {
@@ -77,7 +77,7 @@ impl ShopsPage {
     }
 }
 
-impl RenderablePage for ShopsPage {
+impl<'a> RenderablePage for ShopsPage<'a> {
     fn title(&self) -> String {
         "Shops".into()
     }

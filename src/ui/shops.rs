@@ -11,14 +11,14 @@ use crate::ui::page::RenderablePage;
 use super::{shop::ShopPage, translator::I18ner};
 
 pub struct ShopsPage<'a> {
-    shops: Vec<Rc<RefCell<Shop<'a>>>>,
+    shops: Vec<&'a Shop<'a>>,
     shop_table_state: TableState,
 
     open_shop_page: Option<ShopPage<'a>>,
 }
 
 impl<'a> ShopsPage<'a> {
-    pub fn new(shops: Vec<Rc<RefCell<Shop<'a>>>>) -> Self {
+    pub fn new(shops: Vec<&'a Shop<'a>>) -> Self {
         Self {
             shop_table_state: TableState::default().with_selected(if !shops.is_empty() {
                 Some(0)
@@ -33,7 +33,7 @@ impl<'a> ShopsPage<'a> {
     fn draw_self(&mut self, frame: &mut ratatui::Frame, area: Rect, i18n: &dyn I18ner) {
         let table = Table::new(
             self.shops.iter().map(|shop| {
-                let s = shop.borrow().name.clone();
+                let s = shop.name.clone();
                 Row::new(vec!["Generic".to_string(), s])
             }),
             [1, 50],
@@ -62,7 +62,7 @@ impl<'a> ShopsPage<'a> {
                         let opt_idx = self.shop_table_state.selected();
 
                         if let Some(idx) = opt_idx {
-                            let shop = Rc::clone(&self.shops[idx]);
+                            let shop = &self.shops[idx];
                             self.open_shop_page = Some(ShopPage::new(shop));
                         }
                     }

@@ -54,7 +54,7 @@ enum Transaction {
 
 #[derive(Debug)]
 pub struct ShopPage<'a> {
-    shop: Shop<'a>,
+    shop: &'a Shop<'a>,
     inventory_table_state: TableState,
     focus: FocusedArea,
 
@@ -90,8 +90,7 @@ impl<'a> ShopPage<'a> {
 
     pub fn selected_item(&self) -> Option<StockedItem> {
         let idx = self.inventory_table_state.selected()?;
-        let shop = self.shop.borrow();
-        let item = shop.get_inventory()[idx].to_owned();
+        let item = self.shop.get_inventory()[idx].to_owned();
         Some(item)
     }
 
@@ -142,7 +141,7 @@ impl<'a> ShopPage<'a> {
             Transaction::ShiftFocusForward => self.focus = self.focus.next(),
             Transaction::ShiftFocusBackward => self.focus = self.focus.previous(),
             Transaction::CreateOffer => {
-                self.overlay_page = Some(OfferPage::new(self.shop.clone()));
+                self.overlay_page = Some(OfferPage::new(self.shop));
             }
         }
 
@@ -236,7 +235,7 @@ impl<'a> ShopPage<'a> {
 
 impl<'a> RenderablePage for ShopPage<'a> {
     fn title(&self) -> String {
-        self.shop.borrow().name.clone()
+        self.shop.name.clone()
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame, area: ratatui::prelude::Rect, i18n: &dyn I18ner) {

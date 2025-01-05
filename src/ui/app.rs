@@ -13,7 +13,7 @@ use ratatui::{
 };
 use style::palette::material::{self, AccentedPalette, BLACK, BLUE, GRAY as SLATE, GREEN, RED, WHITE, YELLOW};
 
-use crate::campaign::{Campaign};
+use crate::data::campaign::Campaign;
 use crate::data::shop::Shop;
 
 use super::characters::CharactersPage;
@@ -29,7 +29,8 @@ enum AppPopup {
 
 struct App<'a> {
     // registry: ItemRegistry,
-    campaign: &'a Campaign<'a>,
+    // campaign: &'a mut Campaign<'a>,
+    name: &'a String,
 
     registry_state: TableState,
     is_running: bool,
@@ -66,54 +67,54 @@ pub enum AppMessage {
 
 pub struct Tab<'a> {
     title: String,
-    build_page: &'a dyn Fn(&'static mut Campaign) -> Box<dyn RenderablePage>,
+    page: Box<&'a dyn RenderablePage>,
     color: AccentedPalette
 }
 
 impl<'a> Tab<'a> {
     pub fn new(title: String,
-        build_page: &'a dyn Fn(&'static mut Campaign) -> Box<dyn RenderablePage>,
+        page: Box<&'a dyn RenderablePage>,
         color: AccentedPalette) -> Self {
             Self {
-                title, build_page, color
+                title, page, color
             }
         }
 }
 
-pub fn home_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
-    Box::new(HomePage::new())
-}
+// pub fn home_wrapper<'a>(camp: &'a mut Campaign) -> Box<dyn RenderablePage > {
+//     Box::new(HomePage::new())
+// }
 
-pub fn char_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
-    Box::new(CharactersPage::new(camp.characters.iter().collect()))
-}
+// pub fn char_wrapper<'a>(camp: &'a mut Campaign) -> Box<dyn RenderablePage + 'a> {
+//     Box::new(CharactersPage::new(camp.characters.iter().collect()))
+// }
 
-// pub fn shop_wrapper(camp: &'static mut Campaign) -> Box<dyn RenderablePage> {
+// pub fn shop_wrapper<'a>(camp: &'a mut Campaign) -> Box<dyn RenderablePage + 'a> {
 //     Box::new(ShopsPage::new(camp.shops.iter().collect()))
 // }
 
 
 impl<'a> App<'a> {
-    pub fn new(campaign: &'static mut Campaign, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
+    pub fn new(campaign: &'a mut Campaign<'a>, i18n: &'a dyn I18ner) -> anyhow::Result<Self> {
         Ok(Self {
-            campaign,
+            name: &campaign.name,
             registry_state: TableState::default().with_selected(Some(0)),
             is_running: true,
             overlay: None,
             tabs: vec![
-                Tab::new("Home".into(), &home_wrapper, BLUE),
-                Tab::new("Characters".into(), &char_wrapper, RED),
-                //Tab::new("Shops".into(), &shop_wrapper, YELLOW),
+                Tab::new("Home".into(), Box::new(&HomePage::new()), BLUE),
+                Tab::new("Characters".into(), Box::new(&CharactersPage::new(campaign.characters.iter().collect())), RED),
+                // Tab::new("Shops".into(), Box::new(ShopsPage::new(campaign.shops.iter().collect())), YELLOW),
             ],
             pages: vec![
                 Box::new(HomePage::new()),
                 // @todo fix this
                 // Box::new(ShopsPage::new(campaign.shops.clone())),
-                Box::new(CharactersPage::new(
-                    campaign.characters.iter().map(
-                        |ch| ch
-                    ).collect()
-                )),
+                // Box::new(CharactersPage::new(
+                //     campaign.characters.iter().map(
+                //         |ch| ch
+                //     ).collect()
+                // )),
                 Box::new(SettingsPage::new(),)
             ],
             selected_tab: 0,
@@ -123,7 +124,7 @@ impl<'a> App<'a> {
     }
 
     pub fn name(&self) -> &String {
-        &self.campaign.name
+        self.name
     }
 
     pub fn exit(&mut self) {
@@ -233,7 +234,9 @@ impl<'a> App<'a> {
         frame.render_widget(page_tabs, tab_area);
         frame.render_widget(block, border_area);
 
-        self.pages[self.selected_tab].draw(frame, content_area, self.i18n);
+        // self.pages[self.selected_tab].draw(frame, content_area, self.i18n);
+
+        self.tabs[self.selected_tab].page.draw(frame, content_area, self.i18n);
 
         // let l = ratatui::widgets::Table::new(
         //     self.campaign
@@ -433,7 +436,7 @@ fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-pub fn run_app(campaign: &'static mut Campaign, i18n: &dyn I18ner) -> anyhow::Result<()> {
+pub fn run_app<'a>(campaign: &'a mut Campaign<'a>, i18n: &'a dyn I18ner) -> anyhow::Result<()> {
     let mut terminal = ratatui::init();
     let mut app = App::new(campaign, i18n)?;
     let app_result = app.run(&mut terminal);

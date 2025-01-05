@@ -66,7 +66,7 @@ impl ItemRegistry {
 
     pub fn get(&self, key: &ItemIdentifier) -> Option<&ItemType> {
         for i in self.items.iter() {
-            if i.identifier == key {
+            if i.identifier == *key {
                 return Some(i);
             }
         }

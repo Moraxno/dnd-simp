@@ -1,12 +1,10 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use campaign::{Campaign};
 use chrono::format::Item;
 use clap::Parser;
 
 mod apis;
-mod campaign;
 mod data;
 mod meta;
 mod registry;
@@ -14,7 +12,7 @@ mod ui;
 
 mod state;
 
-use data::campaign::FileMeta;
+use data::campaign::{Campaign, CampaignFolder, FileMeta};
 use data::character::{Character, FileCharacter};
 use data::item;
 use data::shop::{FileShop, Shop};
@@ -66,24 +64,6 @@ fn load_characters(character_folder: PathBuf) -> anyhow::Result<Vec<FileCharacte
 
 fn load_items(items_folder: PathBuf) -> anyhow::Result<Vec<ItemType>> {
     load_object_vector(items_folder)
-}
-
-pub struct CampaignFolder {
-    pub meta: FileMeta,
-    pub item_registry: ItemRegistry,
-    pub characters: Vec<FileCharacter>,
-    pub shops: Vec<FileShop>,
-}
-
-impl CampaignFolder {
-    pub fn empty(name: String) -> Self {
-        Self {
-            meta: FileMeta { name: name },
-            item_registry: ItemRegistry { items: vec![] },
-            characters: vec![],
-            shops: vec![],
-        }
-    }
 }
 
 fn load_campaign_folder(folder_path: PathBuf) -> anyhow::Result<CampaignFolder> {
@@ -159,16 +139,19 @@ fn main() {
     };
 
     let boxed = Box::new(campaign_folder);
-    let persistent_folder: &'static mut CampaignFolder = Box::leak(boxed);
+    let persistent_folder: &'static CampaignFolder = Box::leak(boxed);
 
-    let (mut campaign, mut item_registry) = persistent_folder.destructure();
+    let (mut campaign, item_registry) = persistent_folder.destructure();
 
-    let boxed = Box::new(campaign);
-    let persistent_campaign: &'static mut Campaign = Box::leak(boxed);
+    // let boxed = Box::new(campaign);
+    // let persistent_campaign: &'static mut Campaign = Box::leak(boxed);
 
     let inter = EngNerdI18n {};
+    
+    let boxed = Box::new(inter);
+    let persistent_inter: &'static mut EngNerdI18n = Box::leak(boxed);
 
-    let s = ui::app::run_app(persistent_campaign, &inter);
+    let s = ui::app::run_app(&mut campaign, persistent_inter);
 
 
 }

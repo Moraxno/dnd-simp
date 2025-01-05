@@ -4,7 +4,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::registry::ItemRegistry;
 
-use super::{character::FileCharacter, item::ItemType, shop::FileShop};
+use super::{character::{Character, FileCharacter}, item::ItemType, shop::{FileShop, Shop}};
+
+
+use std::{cell::RefCell, rc::Rc};
+
+use crate::item::Item;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileMeta {
@@ -45,23 +50,6 @@ fn load_items(items_folder: PathBuf) -> anyhow::Result<Vec<ItemType>> {
     load_object_vector(items_folder)
 }
 
-pub struct CampaignFolder {
-    pub meta: FileMeta,
-    pub item_registry: ItemRegistry,
-    pub characters: Vec<FileCharacter>,
-    pub shops: Vec<FileShop>,
-}
-
-impl CampaignFolder {
-    pub fn empty(name: String) -> Self {
-        Self {
-            meta: FileMeta { name: name },
-            item_registry: ItemRegistry { items: vec![] },
-            characters: vec![],
-            shops: vec![],
-        }
-    }
-}
 
 fn load_campaign_folder(folder_path: PathBuf) -> anyhow::Result<CampaignFolder> {
     let items_path = folder_path.join("items"); // @todo make this some global const
@@ -86,4 +74,67 @@ fn load_campaign_folder(folder_path: PathBuf) -> anyhow::Result<CampaignFolder> 
     Ok(cf)
 
 }
+
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum FileStorageVersion {
+    V1,
+}
+
+pub struct Campaign<'a> {
+    pub name: String,
+    pub characters: Vec<Character<'a>>,
+    pub shops: Vec<Shop<'a>>,
+}
+
+pub struct CampaignFolder {
+    pub meta: FileMeta,
+    pub item_registry: ItemRegistry,
+    pub characters: Vec<FileCharacter>,
+    pub shops: Vec<FileShop>,
+}
+
+impl CampaignFolder {
+    pub fn empty(name: String) -> Self {
+        Self {
+            meta: FileMeta { name: name },
+            item_registry: ItemRegistry { items: vec![] },
+            characters: vec![],
+            shops: vec![],
+        }
+    }
+
+    pub fn destructure<'a>(&'a self) -> (Campaign<'a>, &'a ItemRegistry) {
+        let campaign = Campaign::from_files(self.meta.clone(), self.characters.clone(), &self.item_registry);
+
+        (campaign, &self.item_registry)
+    }
+}
+
+
+impl<'a> Campaign<'a> {
+    pub fn from_files(meta: FileMeta, characters: Vec<FileCharacter>, registry: &'a ItemRegistry) -> Self {
+        Self {
+            name: meta.name,
+            characters: characters
+                .into_iter()
+                .map(|ch| 
+                    registry.link_character(ch))
+                .collect(),
+            shops: vec![],
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::CampaignFolder;
+
+    #[test]
+    fn new_campaign_is_empty() {
+        let e = CampaignFolder::empty("New Campaign".into());
+        assert_eq!(e.shops.len(), 0)
+    }
+}
+
 

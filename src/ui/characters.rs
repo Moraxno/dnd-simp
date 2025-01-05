@@ -41,13 +41,13 @@ impl<'a> RenderablePage for CharactersPage<'a> {
         let table = Table::new(
             self.characters
                 .iter()
-                .map(|ch| Row::new(vec![ch.name.as_str()]))
+                .map(|ch| Row::new(vec![ch.name().as_str()]))
                 .collect::<Vec<_>>(),
                 [Constraint::Fill(1)]
         );
 
         let wish_list = match self.selected_character() {
-            Some(char) => { char.wish_list
+            Some(char) => { char.wish_list()
                 .iter()
                 .filter_map(|item|
                     if let Item::Concrete(item_type) = item {

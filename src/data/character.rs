@@ -12,8 +12,8 @@ pub struct Character<'a> {
 }
 
 impl<'a> Character<'a> {
-    pub fn name(&self) -> String {
-        self.state.name
+    pub fn name(&'a self) -> &'a String {
+        &self.state.name
     }
 
     // maybe cache this?
